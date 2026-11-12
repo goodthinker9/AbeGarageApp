@@ -11,7 +11,7 @@ function AddEmployeeForm() {
   const [employee_last_name, setLastName] = useState('');
   const [employee_phone, setPhoneNumber] = useState('');
   const [employee_password, setPassword] = useState('');
-  const [active_employee, setActiveEmployee] = useState(1);
+  const [active_employee] = useState(1);
   const [company_role_id, setCompanyRoleId] = useState(1);
 
   const [emailError, setEmailError] = useState('');
@@ -51,8 +51,8 @@ function AddEmployeeForm() {
       }
     }
 
-    if (!employee_password || employee_password.length < 6) {
-      setPasswordError('Password must be at least 6 characters long');
+    if (!employee_password || employee_password.length < 8) {
+      setPasswordError('Password must be at least 8 characters long');
       valid = false;
     } else {
       setPasswordError('');

@@ -126,6 +126,28 @@ CREATE TABLE IF NOT EXISTS order_status (
 );
 CREATE INDEX IF NOT EXISTS idx_order_status_order_id ON order_status(order_id);
 
+-- ── Row Level Security ───────────────────────────────────────────────────────
+-- RLS is enabled on every table so the Supabase dashboard cannot bypass the
+-- application's access rules when using the anon/service_role keys.
+-- No policies are added here: the backend connects as the DB owner
+-- (the Supabase postgres role) which is exempt from RLS, so all existing
+-- queries continue to work unchanged. If a future Supabase Edge Function or
+-- direct client connection uses a restricted role, policies can be added
+-- without changing the backend at all.
+ALTER TABLE customer_identifier   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE customer_info         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE customer_vehicle_info ENABLE ROW LEVEL SECURITY;
+ALTER TABLE company_roles         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE common_services       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE employee              ENABLE ROW LEVEL SECURITY;
+ALTER TABLE employee_info         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE employee_pass         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE employee_role         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orders                ENABLE ROW LEVEL SECURITY;
+ALTER TABLE order_info            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE order_services        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE order_status          ENABLE ROW LEVEL SECURITY;
+
 -- Seed: company roles --------------------------------------------
 INSERT INTO company_roles (company_role_name)
   VALUES ('Employee'), ('Manager'), ('Admin')

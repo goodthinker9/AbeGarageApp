@@ -2,13 +2,16 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "Abe Garage – Node/Express backend (Postgres)",
-  "main": "app.js",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20 <25"
+  },
   "scripts": {
-    "start": "node app.js",
-    "dev": "node --watch app.js",
+    "start": "node server.js",
+    "dev": "node --watch server.js",
     "db:setup": "node scripts/setup-db.js",
     "seed:admin": "node scripts/seed-admin.js",
-    "test": "echo \"No tests yet\" && exit 0"
+    "test": "jest --forceExit 2>&1"
   },
   "author": "Hamerochu",
   "license": "ISC",
@@ -21,5 +24,14 @@
     "helmet": "^7.1.0",
     "jose": "^5.9.6",
     "pg": "^8.12.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/__tests__/**/*.test.js"],
+    "forceExit": true
   }
 }

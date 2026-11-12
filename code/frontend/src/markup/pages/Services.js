@@ -1,31 +1,72 @@
-import React from 'react';
-
-const serviceList = [
-  { title: 'Oil Change', description: 'Full synthetic or conventional oil change with filter replacement.' },
-  { title: 'Brake Service', description: 'Inspection, pad replacement, and rotor resurfacing or replacement.' },
-  { title: 'Tire Rotation & Balancing', description: 'Extend tire life and improve handling.' },
-  { title: 'Engine Diagnostics', description: 'Computer-based diagnostics to identify warning lights and issues.' },
-  { title: 'Transmission Service', description: 'Fluid flush and filter replacement for smooth shifting.' },
-  { title: 'Air Conditioning', description: 'Recharge, leak detection, and full A/C system repair.' },
-];
+import React, { useState, useEffect } from 'react';
+import serviceService from '../../services/service.service';
 
 function Services() {
+  const [services, setServices]   = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(null);
+
+  useEffect(() => {
+    serviceService
+      .getActiveServices()
+      .then((res) => {
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        return res.json();
+      })
+      .then((data) => setServices(data.data || []))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="contact-section">
+        <div className="auto-container">
+          <p>Loading services…</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="contact-section">
+        <div className="auto-container">
+          <p style={{ color: 'red' }}>Could not load services. Please try again later.</p>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="contact-section">
       <div className="auto-container">
         <div className="contact-title">
           <h2>Our Services</h2>
         </div>
-        <div className="row clearfix">
-          {serviceList.map((service) => (
-            <div key={service.title} className="col-md-6 col-lg-4" style={{ marginBottom: '1.5rem' }}>
-              <div className="card h-100 p-3">
-                <h5>{service.title}</h5>
-                <p>{service.description}</p>
+        {services.length === 0 ? (
+          <p>No services available at this time. Please check back soon.</p>
+        ) : (
+          <div className="row clearfix">
+            {services.map((svc) => (
+              <div key={svc.service_id} className="col-md-6 col-lg-4" style={{ marginBottom: '1.5rem' }}>
+                <div
+                  style={{
+                    border: '1px solid #e0e0e0', borderRadius: '6px',
+                    padding: '1.25rem', height: '100%',
+                  }}
+                >
+                  <h5 style={{ marginBottom: '0.5rem' }}>{svc.service_name}</h5>
+                  {svc.service_description && (
+                    <p style={{ color: '#555', fontSize: '0.95rem' }}>
+                      {svc.service_description}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

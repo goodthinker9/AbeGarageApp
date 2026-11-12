@@ -2,75 +2,102 @@
 
 ## Step 1 — Security cleanup + Supabase/Postgres migration (DONE ✓)
 
-### A. Security cleanup
-
-| # | Task | Status |
-|---|------|--------|
-| A1 | Removed `code/backend/.env.production` and `code/frontend/.env.production` from git tracking (`git rm --cached`) | ✓ |
-| A1 | Added `.env.*` (except `.env.example`) to all three `.gitignore` files | ✓ |
-| A1 | Created `code/backend/.env.example` and `code/frontend/.env.example` with placeholder values only | ✓ |
-| A2 | Removed `console.log(req.body)` from `login.controller.js` | ✓ |
-| A2 | Removed `console.log(requestOptions)` from `frontend/src/services/employee.service.js` | ✓ |
-| A2 | Removed all sensitive `console.log` calls from `LoginForm.js` and `login.service.js` | ✓ |
-| A3 | Deleted the open `GET /install` route and its controller/service | ✓ |
-| A3 | Created `scripts/setup-db.js` → `npm run db:setup` (idempotent schema runner) | ✓ |
-| A3 | Created `scripts/seed-admin.js` → `npm run seed:admin` (reads env, refuses if missing) | ✓ |
-| A3 | No hardcoded password or hash anywhere in the repo | ✓ |
-| A4 | `app.js` fails fast at startup if `JWT_SECRET`, `DATABASE_URL` or `FRONTEND_URL` is missing | ✓ |
-| A4 | Added `helmet` and `express-rate-limit` (strict limit on `POST /api/employee/login`) | ✓ |
-| A4 | Removed unused `sanitize` packages from both backend and frontend | ✓ |
-
-### B. Supabase/Postgres migration
-
-| # | Task | Status |
-|---|------|--------|
-| B5 | Replaced `mysql2` with `pg`; rewrote `config/db.config.js` with `Pool`, SSL, `query()` helper and `getClient()` for transactions | ✓ |
-| B6 | Converted `services/sql/initial-queries.sql` to Postgres: `GENERATED ALWAYS AS IDENTITY`, `TIMESTAMPTZ DEFAULT now()`, `TEXT/VARCHAR`, foreign keys with `ON DELETE` rules, `UNIQUE` constraints, indexes on FKs, `active_service` on `common_services` | ✓ |
-| B6 | Copied schema to `Resources/DB Designs/initial-queries.sql` | ✓ |
-| B7 | Rewrote `employee.service.js` for pg (`$1/$2` placeholders, `RETURNING employee_id`) | ✓ |
-| B7 | Wrapped `createEmployee` in a `BEGIN/COMMIT/ROLLBACK` transaction | ✓ |
-| B7 | Rewrote `login.service.js` for pg | ✓ |
-
-### C. Bug fixes
-
-| # | Task | Status |
-|---|------|--------|
-| C8 | `login.controller.js`: added `return` after failure response; non-empty catch passes to `next(err)` | ✓ |
-| C8 | Login rejects inactive employees (`active_employee = 0`) | ✓ |
-| C9 | `login.service.js`: no longer swallows errors; throws for unexpected failures | ✓ |
-| C9 | `employee.controller.js`: fixed `console.log(err)` referencing undefined `err` → `next(err)` | ✓ |
-| C10 | `auth.middleware.js`: `verifyToken` and `isAdmin` wrapped so errors reach the global handler | ✓ |
-| C10 | Added global error handler in `app.js` | ✓ |
-| C11 | `/admin/employees` wrapped in `PrivateAuthRoute roles={[3]}` in `App.js` | ✓ |
-| C11 | Removed duplicate auth logic and `console.log("Kebede")` from `Employees.js` | ✓ |
-| C11 | Fixed email validation in `LoginForm.js` and `AddEmployeeForm.js` — missing `@` now sets `valid=false` | ✓ |
-| C11 | Removed all sensitive `console.log` calls from frontend forms and services | ✓ |
-| C12 | Added routes for `/about`, `/services`, `/contact`, and `* → 404` in `App.js` | ✓ |
-| C12 | Replaced `<a href>` internal links in `Header.js` and `AdminMenu.js` with `<Link>` | ✓ |
-| C12 | Fixed broken relative image path in sticky header (uses imported `logo` asset) | ✓ |
-| C12 | Sticky header now shows the correct login/logout state | ✓ |
-| C13 | Added `code/frontend/vercel.json` with SPA rewrite to `/index.html` | ✓ |
-
-### D. Documentation
-
-| # | Task | Status |
-|---|------|--------|
-| D14 | `README.md` — setup, env vars, scripts, curl test commands | ✓ |
-| D14 | `docs/PROGRESS.md` — this file | ✓ |
-| D14 | `docs/DECISIONS.md` — architectural decisions | ✓ |
+See git commit `bfd22eb` for full details. All items from the original Step 1 spec are complete.
 
 ---
 
-## Step 2 — Customers, Vehicles, Orders, Services (TODO)
+## Step 2 — Review fixes + Services module (DONE ✓)
 
-- Migrate remaining services (`customer.service.js`, `order.service.js`, `vehicle.service.js`, `service.service.js`) to pg.
-- Rewrite their controllers and routes following the same patterns.
-- Build out the frontend pages for Customers, Orders, Services.
-- Add order status workflow.
+### Part A — Fixes
 
-## Step 3 — Deployment (TODO)
+| # | Task | Status |
+|---|------|--------|
+| A1 | Removed unused `Button` import from `EmployeesList.js` | ✓ |
+| A1 | Removed unused `setActiveEmployee` from `AddEmployeeForm.js` | ✓ |
+| A1 | Fixed `useEffect` dependency array in `EmployeesList.js` — added `token` and `navigate` | ✓ |
+| A1 | Fixed all `href="#"` and `.html` anchors in `Footer.js` — replaced with `<Link>` and real external URLs | ✓ |
+| A1 | `CI=true npm run build` passes with zero ESLint warnings | ✓ |
+| A2 | Added `ALTER TABLE … ENABLE ROW LEVEL SECURITY` for all 13 tables in `initial-queries.sql` with explanatory comment | ✓ |
+| A2 | Copied updated schema to `Resources/DB Designs/` | ✓ |
+| A2 | Applied RLS to existing Supabase tables via `npm run db:setup` | ✓ |
+| A3 | Added `app.set('trust proxy', 1)` to `app.js` | ✓ |
+| A3 | Added `skipSuccessfulRequests: true` to `loginLimiter` | ✓ |
+| A4 | Created `middlewares/validate.js` with hand-written validators for login, create-employee, create-service, update-service | ✓ |
+| A4 | Wired `validateLogin` into `login.routes.js` | ✓ |
+| A4 | Wired `validateCreateEmployee` into `employee.routes.js` | ✓ |
+| A4 | Password minimum raised to 8 chars in both backend validators and both frontend forms | ✓ |
+| A5 | Deleted `install.controller.js`, `install.routes.js`, `install.service.js` (dead stubs) | ✓ |
+| A5 | Other stub files (`customer.*`, `order.*`, `vehicle.*`) left in place — listed as "not started" in Step 3 below | ✓ |
+| A6 | Added `"engines": {"node": ">=20 <25"}` to `backend/package.json` | ✓ |
+| A6 | Created `code/backend/.nvmrc` pinned to Node 22 | ✓ |
+| A6 | Fixed README and DECISIONS so Node version statements agree | ✓ |
+| A6 | Replaced `pgbouncer=true` reference in README with the correct SESSION pooler string format | ✓ |
+| A7 | Replaced broken relative icon path in Header with imported `icon-bar.png` asset | ✓ |
+| A7 | Implemented React-state hamburger menu (open/close toggle) with same links as desktop nav, plus Admin links when logged in | ✓ |
+| A8 | `util/auth.js`: checks JWT `exp` claim; clears `localStorage` and returns `{}` if token is expired or malformed | ✓ |
+| A8 | `EmployeesList.js`: on 401 response, clears `localStorage` and navigates to `/login` | ✓ |
+| A9 | Built real landing page in `Home.js` (hero, intro, services highlights from API, CTA) | ✓ |
+| A9 | Created `src/config/garage.js` with address, phone, email, hours as single-source constants | ✓ |
+| A9 | Updated `Contact.js` to use `garage.js` config | ✓ |
 
-- Configure Render service (env vars, health check).
-- Configure Vercel project (env vars).
-- Set up CI/CD pipeline.
-- Production smoke tests.
+### Part B — Services module
+
+| # | Task | Status |
+|---|------|--------|
+| B1 | `services/service.service.js` — `getAllActiveServices`, `getAllServices`, `getServiceById`, `createService`, `updateService` (dynamic SET) | ✓ |
+| B2 | `controllers/service.controller.js` — 5 handlers, all with `next(err)` | ✓ |
+| B3 | `routes/service.routes.js` — GET /api/services (public), /api/services/all, /api/service/:id, POST /api/service, PUT /api/service (all wired with validation) | ✓ |
+| B4 | Added `isManagerOrAdmin` to `auth.middleware.js` (uses JWT role, no extra DB hit) | ✓ |
+| B5 | `app.js` split into `app.js` (config) + `server.js` (listen) so tests don't bind a port | ✓ |
+| B6 | `src/services/service.service.js` frontend — 5 API call functions | ✓ |
+| B7 | Public `/services` page — loading state, error state, API-driven list | ✓ |
+| B8 | `/admin/services` — table with Active, Name, Description, Edit button (roles 2,3) | ✓ |
+| B9 | `/admin/add-service` — form with validation (roles 2,3) | ✓ |
+| B10 | `/admin/service/edit/:id` — edit form with active toggle (roles 2,3) | ✓ |
+| B11 | Services link added to `AdminMenu.js` | ✓ |
+| B12 | All new routes wired in `App.js` with `PrivateAuthRoute` | ✓ |
+
+### Part C — Tests and docs
+
+| # | Task | Status |
+|---|------|--------|
+| C1 | `__tests__/login.test.js` — 4 validation tests + 1 integration test (skipped without real DB) | ✓ |
+| C2 | `__tests__/services.test.js` — auth gate tests + public endpoint test | ✓ |
+| C3 | All 11 tests pass: `npm test` → `Tests: 11 passed, 11 total` | ✓ |
+| C4 | `README.md` updated — new endpoints, curl examples, corrected Node/pooler notes | ✓ |
+| C5 | `docs/PROGRESS.md` updated (this file) | ✓ |
+| C6 | `docs/DECISIONS.md` updated — RLS, trust proxy, validation, no hard delete | ✓ |
+| C7 | `CI=true npm run build` result: **Compiled successfully.** (exit 0, zero warnings) | ✓ |
+
+---
+
+## Step 3 — Customers + Vehicles (NOT STARTED)
+
+Files present as empty stubs:
+- `backend/routes/customer.routes.js`
+- `backend/controllers/customer.controller.js`
+- `backend/services/customer.service.js`
+- `backend/routes/vehicle.routes.js`
+- `backend/controllers/vehicle.controller.js`
+- `backend/services/vehicle.service.js`
+
+Planned work:
+- GET /api/customers, POST /api/customer, PUT /api/customer — roles 2,3
+- GET /api/customer/:id — roles 2,3
+- GET /api/vehicles/:customer_id, POST /api/vehicle, PUT /api/vehicle — roles 2,3
+- Frontend admin pages: CustomersList, AddCustomerForm, EditCustomer, VehiclesList
+
+---
+
+## Step 4 — Orders + Status workflow + Public order page (NOT STARTED)
+
+Files present as empty stubs:
+- `backend/routes/order.routes.js`
+- `backend/controllers/order.controller.js`
+- `backend/services/order.service.js`
+
+---
+
+## Step 5 — Deployment: Render + Vercel (NOT STARTED)
+
+---

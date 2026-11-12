@@ -1,4 +1,5 @@
 import React from 'react';
+import garageInfo from '../../config/garage';
 
 function Contact() {
   return (
@@ -9,11 +10,14 @@ function Contact() {
         </div>
         <div className="row clearfix">
           <div className="col-lg-6">
-            <ul style={{ listStyle: 'none', padding: 0 }}>
-              <li><strong>Phone:</strong> 1800 456 7890</li>
-              <li><strong>Email:</strong> info@abegarage.com</li>
-              <li><strong>Address:</strong> 123 Main Street, Anytown, USA</li>
-              <li><strong>Hours:</strong> Monday – Saturday, 7:00 AM – 6:00 PM</li>
+            <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2.2' }}>
+              <li><strong>Phone:</strong> {garageInfo.phone}</li>
+              <li>
+                <strong>Email:</strong>{' '}
+                <a href={`mailto:${garageInfo.email}`}>{garageInfo.email}</a>
+              </li>
+              <li><strong>Address:</strong> {garageInfo.address}</li>
+              <li><strong>Hours:</strong> {garageInfo.hours}</li>
             </ul>
           </div>
         </div>

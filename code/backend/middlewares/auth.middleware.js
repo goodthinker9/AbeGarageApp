@@ -5,6 +5,7 @@ const employeeService = require('../services/employee.service');
 
 /**
  * Verify the JWT supplied in the x-access-token header.
+ * Sets req.employee_email and req.employee_role on success.
  */
 const verifyToken = async (req, res, next) => {
   try {
@@ -16,6 +17,7 @@ const verifyToken = async (req, res, next) => {
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     const { payload } = await jwtVerify(token, secret);
     req.employee_email = payload.employee_email;
+    req.employee_role  = payload.employee_role;   // cached from token
     next();
   } catch (err) {
     return res.status(401).json({ status: 'fail', message: 'Unauthorized.' });
@@ -23,7 +25,8 @@ const verifyToken = async (req, res, next) => {
 };
 
 /**
- * Verify that the authenticated employee has the Admin role (company_role_id === 3).
+ * Allow Admin only (company_role_id === 3).
+ * Reads from the DB to get the latest role (not trusting the token alone).
  */
 const isAdmin = async (req, res, next) => {
   try {
@@ -40,4 +43,17 @@ const isAdmin = async (req, res, next) => {
   }
 };
 
-module.exports = { verifyToken, isAdmin };
+/**
+ * Allow Manager or Admin (company_role_id 2 or 3).
+ * Uses the role encoded in the JWT to avoid an extra DB round-trip on every
+ * service/order read; the token already expires in 24 h.
+ */
+const isManagerOrAdmin = (req, res, next) => {
+  const role = Number(req.employee_role);
+  if (role === 2 || role === 3) {
+    return next();
+  }
+  return res.status(403).json({ status: 'fail', message: 'Manager or Admin access required.' });
+};
+
+module.exports = { verifyToken, isAdmin, isManagerOrAdmin };

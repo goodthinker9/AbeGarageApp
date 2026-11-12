@@ -1,10 +1,9 @@
-// Import the express module  
 const express = require('express');
-// Call the router method from express to create the router 
 const router = express.Router();
-// Import the login controller 
-const loginControllers = require("../controllers/login.controller");
-// Create a route to handle the login request on post
-router.post("/api/employee/login", loginControllers.logIn);
-// Export the router
+const loginController = require('../controllers/login.controller');
+const { validateLogin } = require('../middlewares/validate');
+
+// Validate first, then authenticate
+router.post('/api/employee/login', validateLogin, loginController.logIn);
+
 module.exports = router;
