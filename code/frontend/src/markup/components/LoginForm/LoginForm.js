@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import loginService from '../../../services/login.service';
 
 function LoginForm() {
-  const navigate = useNavigate();
   const location = useLocation();
 
   const [employee_email, setEmail] = useState('');

@@ -16,4 +16,5 @@ const logOut = () => {
   localStorage.removeItem('employee');
 };
 
-export default { logIn, logOut };
+const loginService = { logIn, logOut };
+export default loginService;
