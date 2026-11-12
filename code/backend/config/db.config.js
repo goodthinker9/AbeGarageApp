@@ -1,20 +1,32 @@
-// Import the mysql2 module Promise Wrapper 
-const mysql = require('mysql2/promise');
-// Prepare connection parameters we use to connect to the database
-const dbConfig = {
-  connectionLimit: 10,
-  socketPath: process.env.DB_SOCKET_PATH,
-  password: process.env.DB_PASS,
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-}
-// Create the connection pool  
-const pool = mysql.createPool(dbConfig);
-// Prepare a function that will execute the SQL queries asynchronously
+// PostgreSQL connection pool using pg
+const { Pool } = require('pg');
+
+// DATABASE_URL must be set; enforced at startup by app.js
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }, // required by Supabase/Render
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
+});
+
+/**
+ * Execute a parameterised SQL query.
+ * @param {string} sql   - SQL string with $1, $2 … placeholders
+ * @param {Array}  params - parameter values
+ * @returns {Promise<Array>} rows
+ */
 async function query(sql, params) {
-  const [rows, fields] = await pool.execute(sql, params);
+  const { rows } = await pool.query(sql, params);
   return rows;
 }
-// Export the query function for use in the application 
-module.exports = { query };
+
+/**
+ * Obtain a raw client for multi-statement transactions.
+ * Caller must call client.release() after use.
+ */
+async function getClient() {
+  return pool.connect();
+}
+
+module.exports = { query, getClient };

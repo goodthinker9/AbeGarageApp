@@ -1,54 +1,43 @@
-// Import the dotenv package
+// Auth middleware
 require('dotenv').config();
-// Import the jsonwebtoken package
-const jwt = require("jsonwebtoken");
-// A function to verify the token received from the frontend 
-// Import the employee service 
-const employeeService = require("../services/employee.service");
+const { jwtVerify } = require('jose');
+const employeeService = require('../services/employee.service');
 
-// A function to verify the token received from the frontend 
+/**
+ * Verify the JWT supplied in the x-access-token header.
+ */
 const verifyToken = async (req, res, next) => {
-  let token = req.headers["x-access-token"];
-  if (!token) {
-    return res.status(403).send({
-      status: "fail",
-      message: "No token provided!"
-    });
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(401).send({
-        status: "fail",
-        message: "Unauthorized!"
-      });
+  try {
+    const token = req.headers['x-access-token'];
+    if (!token) {
+      return res.status(403).json({ status: 'fail', message: 'No token provided.' });
     }
-    // console.log("Here is the decoded token");
-    // console.log(decoded);
-    req.employee_email = decoded.employee_email;
-    next();
-  });
-}
 
-// A function to check if the user is an admin
-const isAdmin = async (req, res, next) => {
-  // let token = req.headers["x-access-token"];
-  console.log(req.employee_email);
-  const employee_email = req.employee_email;
-  const employee = await employeeService.getEmployeeByEmail(employee_email);
-  if (employee[0].company_role_id === 3) {
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const { payload } = await jwtVerify(token, secret);
+    req.employee_email = payload.employee_email;
     next();
-  } else {
-    return res.status(403).send({
-      status: "fail",
-      error: "Not an Admin!"
-    });
+  } catch (err) {
+    return res.status(401).json({ status: 'fail', message: 'Unauthorized.' });
   }
-}
+};
 
-const authMiddleware = {
-  verifyToken,
-  isAdmin
-}
+/**
+ * Verify that the authenticated employee has the Admin role (company_role_id === 3).
+ */
+const isAdmin = async (req, res, next) => {
+  try {
+    const employees = await employeeService.getEmployeeByEmail(req.employee_email);
+    if (employees.length === 0) {
+      return res.status(403).json({ status: 'fail', message: 'Employee not found.' });
+    }
+    if (employees[0].company_role_id !== 3) {
+      return res.status(403).json({ status: 'fail', message: 'Admin access required.' });
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
 
-module.exports = authMiddleware;
+module.exports = { verifyToken, isAdmin };

@@ -1,68 +1,123 @@
-// Import the query function from the db.config.js file 
-const conn = require("../config/db.config");
-// Import the bcrypt module 
+// Employee service – PostgreSQL (pg)
+const { query, getClient } = require('../config/db.config');
 const bcrypt = require('bcrypt');
-// A function to check if employee exists in the database 
+
+/**
+ * Check whether an employee with the given email already exists.
+ * @param {string} email
+ * @returns {Promise<boolean>}
+ */
 async function checkIfEmployeeExists(email) {
-  const query = "SELECT * FROM employee WHERE employee_email = ? ";
-  const rows = await conn.query(query, [email]);
-  console.log(rows);
-  if (rows.length > 0) {
-    return true;
-  }
-  return false;
+  const rows = await query(
+    'SELECT employee_id FROM employee WHERE employee_email = $1',
+    [email],
+  );
+  return rows.length > 0;
 }
 
-// A function to create a new employee 
+/**
+ * Create a new employee inside a transaction.
+ * Returns { employee_id } on success.
+ * Throws on failure – the controller is responsible for handling the error.
+ * @param {Object} employee
+ * @returns {Promise<{ employee_id: number }>}
+ */
 async function createEmployee(employee) {
-  let createdEmployee = {};
+  const hashed = await bcrypt.hash(employee.employee_password, 12);
+  const client = await getClient();
   try {
-    // Generate a salt and hash the password 
-    const salt = await bcrypt.genSalt(10);
-    // Hash the password 
-    const hashedPassword = await bcrypt.hash(employee.employee_password, salt);
-    // Insert the email in to the employee table  
-    const query = "INSERT INTO employee (employee_email, active_employee) VALUES (?, ?)";
-    const rows = await conn.query(query, [employee.employee_email, employee.active_employee]);
-    console.log(rows);
-    if (rows.affectedRows !== 1) {
-      return false;
-    }
-    // Get the employee id from the insert 
-    const employee_id = rows.insertId;
-    // Insert the remaining data in to the employee_info, employee_pass, and employee_role tables  
-    const query2 = "INSERT INTO employee_info (employee_id, employee_first_name, employee_last_name, employee_phone) VALUES (?, ?, ?, ?)";
-    const rows2 = await conn.query(query2, [employee_id, employee.employee_first_name, employee.employee_last_name, employee.employee_phone]);
-    const query3 = "INSERT INTO employee_pass (employee_id, employee_password_hashed) VALUES (?, ?)";
-    const rows3 = await conn.query(query3, [employee_id, hashedPassword]);
-    const query4 = "INSERT INTO employee_role (employee_id, company_role_id) VALUES (?, ?)";
-    const rows4 = await conn.query(query4, [employee_id, employee.company_role_id]);
-    // construct to the employee object to return 
-    createdEmployee = {
-      employee_id: employee_id
-    }
+    await client.query('BEGIN');
+
+    // 1. Insert email into employee table
+    const empResult = await client.query(
+      'INSERT INTO employee (employee_email, active_employee) VALUES ($1, $2) RETURNING employee_id',
+      [employee.employee_email, employee.active_employee ?? 1],
+    );
+    const employee_id = empResult.rows[0].employee_id;
+
+    // 2. Insert employee_info
+    await client.query(
+      'INSERT INTO employee_info (employee_id, employee_first_name, employee_last_name, employee_phone) VALUES ($1, $2, $3, $4)',
+      [employee_id, employee.employee_first_name, employee.employee_last_name, employee.employee_phone],
+    );
+
+    // 3. Insert password hash
+    await client.query(
+      'INSERT INTO employee_pass (employee_id, employee_password_hashed) VALUES ($1, $2)',
+      [employee_id, hashed],
+    );
+
+    // 4. Insert role
+    await client.query(
+      'INSERT INTO employee_role (employee_id, company_role_id) VALUES ($1, $2)',
+      [employee_id, employee.company_role_id],
+    );
+
+    await client.query('COMMIT');
+    return { employee_id };
   } catch (err) {
-    console.log(err);
+    await client.query('ROLLBACK');
+    throw err; // propagate to controller
+  } finally {
+    client.release();
   }
-  // Return the employee object 
-  return createdEmployee;
 }
-// A function to get employee by email
+
+/**
+ * Fetch a single employee record joined across all four tables.
+ * Returns an array (0 or 1 rows).
+ * @param {string} employee_email
+ */
 async function getEmployeeByEmail(employee_email) {
-  const query = "SELECT * FROM employee INNER JOIN employee_info ON employee.employee_id = employee_info.employee_id INNER JOIN employee_pass ON employee.employee_id = employee_pass.employee_id INNER JOIN employee_role ON employee.employee_id = employee_role.employee_id WHERE employee.employee_email = ?";
-  const rows = await conn.query(query, [employee_email]);
+  const rows = await query(
+    `SELECT
+       e.employee_id,
+       e.employee_email,
+       e.active_employee,
+       e.added_date,
+       ei.employee_first_name,
+       ei.employee_last_name,
+       ei.employee_phone,
+       ep.employee_password_hashed,
+       er.company_role_id
+     FROM employee e
+     JOIN employee_info ei ON e.employee_id = ei.employee_id
+     JOIN employee_pass  ep ON e.employee_id = ep.employee_id
+     JOIN employee_role  er ON e.employee_id = er.employee_id
+     WHERE e.employee_email = $1`,
+    [employee_email],
+  );
   return rows;
 }
-// A function to get all employees
+
+/**
+ * Fetch the most recent 10 employees.
+ */
 async function getAllEmployees() {
-  const query = "SELECT * FROM employee INNER JOIN employee_info ON employee.employee_id = employee_info.employee_id INNER JOIN employee_role ON employee.employee_id = employee_role.employee_id INNER JOIN company_roles ON employee_role.company_role_id = company_roles.company_role_id ORDER BY employee.employee_id DESC limit 10";
-  const rows = await conn.query(query);
+  const rows = await query(
+    `SELECT
+       e.employee_id,
+       e.employee_email,
+       e.active_employee,
+       e.added_date,
+       ei.employee_first_name,
+       ei.employee_last_name,
+       ei.employee_phone,
+       er.company_role_id,
+       cr.company_role_name
+     FROM employee e
+     JOIN employee_info  ei ON e.employee_id = ei.employee_id
+     JOIN employee_role  er ON e.employee_id = er.employee_id
+     JOIN company_roles  cr ON er.company_role_id = cr.company_role_id
+     ORDER BY e.employee_id DESC
+     LIMIT 10`,
+  );
   return rows;
 }
-// Export the functions for use in the controller
+
 module.exports = {
   checkIfEmployeeExists,
   createEmployee,
   getEmployeeByEmail,
-  getAllEmployees
+  getAllEmployees,
 };

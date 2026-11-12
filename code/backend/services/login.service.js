@@ -1,40 +1,38 @@
-// Import the query function from the db.config.js file 
-const conn = require("../config/db.config");
-// Import the bcrypt module to do the password comparison 
+// Login service – PostgreSQL (pg)
 const bcrypt = require('bcrypt');
-// Import the employee service to get employee by email  
-const employeeService = require("./employee.service");
-// Handle employee login 
+const employeeService = require('./employee.service');
+
+/**
+ * Validate credentials and return employee data.
+ * Returns { status, message } on failure or { status: 'success', data } on success.
+ * Throws on unexpected DB errors – controller is responsible for catching.
+ * @param {{ employee_email: string, employee_password: string }} employeeData
+ */
 async function logIn(employeeData) {
-  try {
-    let returnData = {}; // Object to be returned
-    const employee = await employeeService.getEmployeeByEmail(employeeData.employee_email);
-    if (employee.length === 0) {
-      returnData = {
-        status: "fail",
-        message: "Employee does not exist"
-      };
-      return returnData;
-    }
-    const passwordMatch = await bcrypt.compare(employeeData.employee_password, employee[0].employee_password_hashed);
-    if (!passwordMatch) {
-      returnData = {
-        status: "fail",
-        message: "Incorrect password"
-      };
-      return returnData;
-    }
-    returnData = {
-      status: "success",
-      data: employee[0]
-    };
-    return returnData;
-  } catch (error) {
-    console.log(error);
+  const employees = await employeeService.getEmployeeByEmail(employeeData.employee_email);
+
+  if (employees.length === 0) {
+    return { status: 'fail', message: 'Invalid credentials.' };
   }
+
+  const employee = employees[0];
+
+  // Reject inactive employees
+  if (!employee.active_employee) {
+    return { status: 'fail', message: 'Account is inactive. Contact an administrator.' };
+  }
+
+  const passwordMatch = await bcrypt.compare(
+    employeeData.employee_password,
+    employee.employee_password_hashed,
+  );
+
+  if (!passwordMatch) {
+    // Generic message to avoid user enumeration
+    return { status: 'fail', message: 'Invalid credentials.' };
+  }
+
+  return { status: 'success', data: employee };
 }
 
-// Export the function 
-module.exports = {
-  logIn
-};
+module.exports = { logIn };
