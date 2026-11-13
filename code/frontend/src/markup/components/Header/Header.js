@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import logo    from '../../../assets/images/logo.png';
-import iconBar from '../../../assets/template_assets/images/icons/icon-bar.png';
+import logo     from '../../../assets/images/logo.png';
+import iconBar  from '../../../assets/template_assets/images/icons/icon-bar.png';
 import loginService from '../../../services/login.service';
-import { useAuth } from '../../../Contexts/AuthContext';
+import { useAuth }  from '../../../Contexts/AuthContext';
+import garageInfo   from '../../../config/garage';
 
 function Header() {
   const { isLogged, setIsLogged, employee } = useAuth();
@@ -19,13 +20,12 @@ function Header() {
 
   return (
     <header className="main-header header-style-one">
-      {/* ── Top bar ─────────────────────────────────────────────────────── */}
+      {/* ── Top bar ────────────────────────────────────────────────────────── */}
       <div className="header-top">
         <div className="auto-container">
           <div className="inner-container">
             <div className="left-column">
-              <div className="text">Enjoy the Beso while we fix your car</div>
-              <div className="office-hour">Monday – Saturday 7:00AM – 6:00PM</div>
+              <div className="office-hour">{garageInfo.hours}</div>
             </div>
             <div className="right-column">
               {isLogged ? (
@@ -34,7 +34,7 @@ function Header() {
                 </div>
               ) : (
                 <div className="phone-number">
-                  Schedule Appointment: <strong>+1 800 456 7890</strong>
+                  Call us: <strong>{garageInfo.phone}</strong>
                 </div>
               )}
             </div>
@@ -42,7 +42,7 @@ function Header() {
         </div>
       </div>
 
-      {/* ── Main header ─────────────────────────────────────────────────── */}
+      {/* ── Main header ─────────────────────────────────────────────────────── */}
       <div className="header-upper">
         <div className="auto-container">
           <div className="inner-container">
@@ -53,7 +53,6 @@ function Header() {
             </div>
             <div className="right-column">
               <div className="nav-outer">
-                {/* Hamburger – React-controlled */}
                 <button
                   className="mobile-nav-toggler"
                   onClick={() => setMenuOpen((o) => !o)}
@@ -63,7 +62,6 @@ function Header() {
                 >
                   <img src={iconBar} alt="menu" />
                 </button>
-
                 <nav className="main-menu navbar-expand-md navbar-light">
                   <div className="collapse navbar-collapse show clearfix">
                     <ul className="navigation">
@@ -78,11 +76,7 @@ function Header() {
               <div className="search-btn" />
               {isLogged ? (
                 <div className="link-btn">
-                  <button
-                    className="theme-btn btn-style-one blue"
-                    onClick={logOut}
-                    type="button"
-                  >
+                  <button className="theme-btn btn-style-one blue" onClick={logOut} type="button">
                     Log out
                   </button>
                 </div>
@@ -96,7 +90,7 @@ function Header() {
         </div>
       </div>
 
-      {/* ── Sticky header ───────────────────────────────────────────────── */}
+      {/* ── Sticky header ───────────────────────────────────────────────────── */}
       <div className="sticky-header">
         <div className="header-upper">
           <div className="auto-container">
@@ -122,11 +116,7 @@ function Header() {
                 <div className="search-btn" />
                 {isLogged ? (
                   <div className="link-btn">
-                    <button
-                      className="theme-btn btn-style-one blue"
-                      onClick={logOut}
-                      type="button"
-                    >
+                    <button className="theme-btn btn-style-one blue" onClick={logOut} type="button">
                       Log out
                     </button>
                   </div>
@@ -141,7 +131,7 @@ function Header() {
         </div>
       </div>
 
-      {/* ── React-driven mobile menu ─────────────────────────────────────── */}
+      {/* ── React mobile menu ───────────────────────────────────────────────── */}
       {menuOpen && (
         <div
           className="mobile-menu-overlay"
@@ -164,23 +154,19 @@ function Header() {
           <nav aria-label="Mobile navigation">
             <ul style={{ listStyle: 'none', padding: 0, margin: '2rem 0 0' }}>
               {[
-                { to: '/',        label: 'Home'       },
-                { to: '/about',   label: 'About Us'   },
-                { to: '/services',label: 'Services'   },
-                { to: '/contact', label: 'Contact Us' },
+                { to: '/',         label: 'Home'       },
+                { to: '/about',    label: 'About Us'   },
+                { to: '/services', label: 'Services'   },
+                { to: '/contact',  label: 'Contact Us' },
               ].map(({ to, label }) => (
                 <li key={to} style={{ marginBottom: '1.25rem' }}>
-                  <Link
-                    to={to}
-                    onClick={closeMenu}
-                    style={{ color: '#fff', fontSize: '1.25rem', textDecoration: 'none' }}
-                  >
+                  <Link to={to} onClick={closeMenu}
+                    style={{ color: '#fff', fontSize: '1.25rem', textDecoration: 'none' }}>
                     {label}
                   </Link>
                 </li>
               ))}
 
-              {/* Admin links – only shown when logged in as manager/admin */}
               {isLogged && (
                 <>
                   <li style={{ borderTop: '1px solid #444', margin: '1rem 0', paddingTop: '1rem' }}>
@@ -189,18 +175,15 @@ function Header() {
                     </span>
                   </li>
                   {[
-                    { to: '/admin/orders',      label: 'Orders'       },
-                    { to: '/admin/employees',   label: 'Employees'    },
-                    { to: '/admin/add-employee',label: 'Add Employee' },
-                    { to: '/admin/services',    label: 'Services'     },
-                    { to: '/admin/customers',   label: 'Customers'    },
+                    { to: '/admin/orders',       label: 'Orders'       },
+                    { to: '/admin/employees',    label: 'Employees'    },
+                    { to: '/admin/add-employee', label: 'Add Employee' },
+                    { to: '/admin/services',     label: 'Services'     },
+                    { to: '/admin/customers',    label: 'Customers'    },
                   ].map(({ to, label }) => (
                     <li key={to} style={{ marginBottom: '1rem' }}>
-                      <Link
-                        to={to}
-                        onClick={closeMenu}
-                        style={{ color: '#ccc', fontSize: '1.1rem', textDecoration: 'none' }}
-                      >
+                      <Link to={to} onClick={closeMenu}
+                        style={{ color: '#ccc', fontSize: '1.1rem', textDecoration: 'none' }}>
                         {label}
                       </Link>
                     </li>
@@ -222,11 +205,8 @@ function Header() {
 
               {!isLogged && (
                 <li style={{ marginTop: '1.5rem' }}>
-                  <Link
-                    to="/login"
-                    onClick={closeMenu}
-                    style={{ color: '#fff', fontSize: '1.25rem', textDecoration: 'none' }}
-                  >
+                  <Link to="/login" onClick={closeMenu}
+                    style={{ color: '#fff', fontSize: '1.25rem', textDecoration: 'none' }}>
                     Login
                   </Link>
                 </li>

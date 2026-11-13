@@ -2,22 +2,32 @@ import React from 'react';
 import { Routes, Route } from 'react-router';
 
 // Public pages
-import Home        from './markup/pages/Home';
-import Login       from './markup/pages/Login';
-import About       from './markup/pages/About';
-import Services    from './markup/pages/Services';
-import Contact     from './markup/pages/Contact';
+import Home         from './markup/pages/Home';
+import Login        from './markup/pages/Login';
+import About        from './markup/pages/About';
+import Services     from './markup/pages/Services';
+import Contact      from './markup/pages/Contact';
 import Unauthorized from './markup/pages/Unauthorized';
-import NotFound    from './markup/pages/404';
+import NotFound     from './markup/pages/404';
 
-// Admin pages
-import AddEmployee   from './markup/pages/admin/AddEmployee';
-import Employees     from './markup/pages/admin/Employees';
-import Orders        from './markup/pages/admin/Orders';
-import Customers     from './markup/pages/admin/Customers';
+// Admin pages – employees
+import AddEmployee from './markup/pages/admin/AddEmployee';
+import Employees   from './markup/pages/admin/Employees';
+
+// Admin pages – orders
+import Orders from './markup/pages/admin/Orders';
+
+// Admin pages – services
 import AdminServices from './markup/pages/admin/AdminServices';
 import AddService    from './markup/pages/admin/AddService';
 import EditService   from './markup/pages/admin/EditService';
+
+// Admin pages – customers & vehicles
+import AdminCustomers from './markup/pages/admin/AdminCustomers';
+import AddCustomer    from './markup/pages/admin/AddCustomer';
+import EditCustomer   from './markup/pages/admin/EditCustomer';
+import CustomerDetail from './markup/pages/admin/CustomerDetail';
+import EditVehicle    from './markup/pages/admin/EditVehicle';
 
 // Auth
 import PrivateAuthRoute from './markup/components/Auth/PrivateAuthRoute';
@@ -39,76 +49,53 @@ function App() {
       <Header />
       <Routes>
         {/* Public */}
-        <Route path="/"            element={<Home />} />
-        <Route path="/login"       element={<Login />} />
-        <Route path="/about"       element={<About />} />
-        <Route path="/services"    element={<Services />} />
-        <Route path="/contact"     element={<Contact />} />
+        <Route path="/"             element={<Home />} />
+        <Route path="/login"        element={<Login />} />
+        <Route path="/about"        element={<About />} />
+        <Route path="/services"     element={<Services />} />
+        <Route path="/contact"      element={<Contact />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
-        {/* Admin – all employees */}
-        <Route
-          path="/admin/orders"
-          element={
-            <PrivateAuthRoute roles={[1, 2, 3]}>
-              <Orders />
-            </PrivateAuthRoute>
-          }
-        />
+        {/* Admin – all employees (role 1,2,3) */}
+        <Route path="/admin/orders" element={
+          <PrivateAuthRoute roles={[1, 2, 3]}><Orders /></PrivateAuthRoute>
+        } />
 
-        {/* Admin – managers and admins */}
-        <Route
-          path="/admin/customers"
-          element={
-            <PrivateAuthRoute roles={[2, 3]}>
-              <Customers />
-            </PrivateAuthRoute>
-          }
-        />
-        <Route
-          path="/admin/services"
-          element={
-            <PrivateAuthRoute roles={[2, 3]}>
-              <AdminServices />
-            </PrivateAuthRoute>
-          }
-        />
-        <Route
-          path="/admin/add-service"
-          element={
-            <PrivateAuthRoute roles={[2, 3]}>
-              <AddService />
-            </PrivateAuthRoute>
-          }
-        />
-        <Route
-          path="/admin/service/edit/:id"
-          element={
-            <PrivateAuthRoute roles={[2, 3]}>
-              <EditService />
-            </PrivateAuthRoute>
-          }
-        />
+        {/* Admin – managers + admins (role 2,3) */}
+        <Route path="/admin/customers" element={
+          <PrivateAuthRoute roles={[2, 3]}><AdminCustomers /></PrivateAuthRoute>
+        } />
+        <Route path="/admin/add-customer" element={
+          <PrivateAuthRoute roles={[2, 3]}><AddCustomer /></PrivateAuthRoute>
+        } />
+        <Route path="/admin/customer/edit/:id" element={
+          <PrivateAuthRoute roles={[2, 3]}><EditCustomer /></PrivateAuthRoute>
+        } />
+        <Route path="/admin/customer/:id" element={
+          <PrivateAuthRoute roles={[2, 3]}><CustomerDetail /></PrivateAuthRoute>
+        } />
+        <Route path="/admin/vehicle/edit/:id" element={
+          <PrivateAuthRoute roles={[2, 3]}><EditVehicle /></PrivateAuthRoute>
+        } />
+        <Route path="/admin/services" element={
+          <PrivateAuthRoute roles={[2, 3]}><AdminServices /></PrivateAuthRoute>
+        } />
+        <Route path="/admin/add-service" element={
+          <PrivateAuthRoute roles={[2, 3]}><AddService /></PrivateAuthRoute>
+        } />
+        <Route path="/admin/service/edit/:id" element={
+          <PrivateAuthRoute roles={[2, 3]}><EditService /></PrivateAuthRoute>
+        } />
 
-        {/* Admin – admins only */}
-        <Route
-          path="/admin/employees"
-          element={
-            <PrivateAuthRoute roles={[3]}>
-              <Employees />
-            </PrivateAuthRoute>
-          }
-        />
-        <Route
-          path="/admin/add-employee"
-          element={
-            <PrivateAuthRoute roles={[3]}>
-              <AddEmployee />
-            </PrivateAuthRoute>
-          }
-        />
+        {/* Admin – admins only (role 3) */}
+        <Route path="/admin/employees" element={
+          <PrivateAuthRoute roles={[3]}><Employees /></PrivateAuthRoute>
+        } />
+        <Route path="/admin/add-employee" element={
+          <PrivateAuthRoute roles={[3]}><AddEmployee /></PrivateAuthRoute>
+        } />
 
-        {/* 404 catch-all */}
+        {/* 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />

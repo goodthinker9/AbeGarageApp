@@ -10,17 +10,15 @@ if (missing.length) {
 }
 
 const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
+const cors    = require('cors');
+const helmet  = require('helmet');
 const rateLimit = require('express-rate-limit');
 
-// ── CORS ─────────────────────────────────────────────────────────────────────
 const corsOptions = {
   origin: process.env.FRONTEND_URL,
   optionsSuccessStatus: 200,
 };
 
-// ── Rate limiter for the login endpoint ──────────────────────────────────────
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -33,19 +31,17 @@ const loginLimiter = rateLimit({
 const router = require('./routes');
 const app = express();
 
-// Trust the first proxy (required for correct IP behind Render/Vercel/Nginx)
 app.set('trust proxy', 1);
-
-// ── Security middleware ───────────────────────────────────────────────────────
 app.use(helmet());
 app.use(cors(corsOptions));
 app.use(express.json());
-
-// Apply login rate limit before the router
 app.use('/api/employee/login', loginLimiter);
-
-// ── Routes ────────────────────────────────────────────────────────────────────
 app.use(router);
+
+// ── JSON 404 for unknown /api routes ─────────────────────────────────────────
+app.use('/api', (req, res) => {
+  res.status(404).json({ status: 'fail', message: `${req.method} ${req.path} not found.` });
+});
 
 // ── Global error handler ─────────────────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars

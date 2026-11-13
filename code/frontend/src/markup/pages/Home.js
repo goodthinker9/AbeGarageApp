@@ -4,7 +4,7 @@ import bannerImg from '../../assets/images/banner/banner.jpg';
 import garageInfo from '../../config/garage';
 
 function Home() {
-  const [services, setServices]   = useState([]);
+  const [services, setServices]     = useState([]);
   const [loadingSvc, setLoadingSvc] = useState(true);
 
   useEffect(() => {
@@ -13,7 +13,7 @@ function Home() {
       .then((data) => {
         if (data.status === 'success') setServices(data.data.slice(0, 6));
       })
-      .catch(() => { /* silently ignore – services section just stays hidden */ })
+      .catch(() => { /* silently ignore – services section stays hidden */ })
       .finally(() => setLoadingSvc(false));
   }, []);
 
@@ -34,11 +34,10 @@ function Home() {
         <div className="auto-container" style={{ width: '100%' }}>
           <div style={{ maxWidth: '600px', color: '#fff' }}>
             <h1 style={{ fontSize: '2.8rem', fontWeight: 700, lineHeight: 1.2, marginBottom: '1rem' }}>
-              Your Trusted Auto Repair Experts
+              {garageInfo.name}
             </h1>
             <p style={{ fontSize: '1.1rem', marginBottom: '1.5rem' }}>
-              Certified technicians, honest pricing, and repairs done right the first time.
-              Serving the community with pride.
+              Professional auto repair for the community.
             </p>
             <Link to="/contact" className="theme-btn btn-style-one" style={{ marginRight: '1rem' }}>
               Schedule Appointment
@@ -56,15 +55,10 @@ function Home() {
           <div className="row clearfix" style={{ alignItems: 'center' }}>
             <div className="col-lg-6">
               <h2>Why Choose {garageInfo.name}?</h2>
-              <p>
-                We've been keeping cars on the road for years. Whether it's a quick oil change
-                or a full engine rebuild, we bring the same care and skill to every job.
-              </p>
               <ul style={{ paddingLeft: '1.2rem', lineHeight: '2' }}>
-                <li>ASE-certified mechanics</li>
-                <li>Transparent, upfront pricing</li>
-                <li>12-month / 12,000-mile warranty on repairs</li>
-                <li>Comfortable waiting lounge with complimentary coffee (Beso!)</li>
+                {garageInfo.highlights.map((h) => (
+                  <li key={h}>{h}</li>
+                ))}
               </ul>
             </div>
             <div className="col-lg-6" style={{ textAlign: 'center', paddingTop: '1rem' }}>
@@ -128,7 +122,7 @@ function Home() {
       >
         <div className="auto-container">
           <h2 style={{ color: '#fff', marginBottom: '0.75rem' }}>
-            Ready to get your car fixed?
+            Ready to get your car serviced?
           </h2>
           <p style={{ marginBottom: '1.5rem' }}>
             Call us on <strong>{garageInfo.phone}</strong> or use the link below.

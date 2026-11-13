@@ -27,7 +27,7 @@ Resources/   – DB schema copies
 | npm | 9+ |
 | A Supabase project | with the SESSION pooler `DATABASE_URL` |
 
-> **Node version note:** `jsonwebtoken` is incompatible with Node 22+. This project uses `jose` instead, which works on all current Node versions. The backend `package.json` enforces `>=20 <25`. Use the `.nvmrc` in `code/backend/` to pin your local version with nvm.
+> **Node version note:** `jsonwebtoken` is incompatible with Node 22+. This project uses `jose` instead, which works on all current Node versions. Use `.nvmrc` in `code/backend/` to pin your local version with nvm.
 
 ---
 
@@ -48,16 +48,14 @@ Copy `code/backend/.env.example` and fill in real values.
 
 #### Supabase SESSION pooler URL format
 
-Use the **Session mode** pooler (not Transaction mode) so `SET` commands work:
-
 ```
 postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/<database>
 ```
 
-- Host: `*.pooler.supabase.com`  
-- User: `postgres.<project-ref>`  
-- Port: `5432` (session mode)  
-- Do **not** append `?pgbouncer=true` — that is for transaction mode
+- Host: `*.pooler.supabase.com`
+- User: `postgres.<project-ref>`
+- Port: `5432` (session mode)
+- Do **not** append `?pgbouncer=true`
 
 ### Frontend — `code/frontend/.env`
 
@@ -84,13 +82,11 @@ cp .env.example .env
 npm run db:setup
 
 # 4. Create the first admin account
-#    Set ADMIN_EMAIL and ADMIN_PASSWORD in .env first (or inline)
 ADMIN_EMAIL=admin@garage.com ADMIN_PASSWORD=StrongPass1! npm run seed:admin
 
 # 5. Start the API server
-npm start
-# or for auto-restart during development:
-npm run dev
+npm start          # production
+npm run dev        # auto-restart during development
 ```
 
 ```bash
@@ -120,7 +116,7 @@ CI=true npm run build
 | `npm run dev` | Start with Node `--watch` |
 | `npm run db:setup` | Apply the Postgres schema (idempotent) |
 | `npm run seed:admin` | Create the first admin employee |
-| `npm test` | Run Jest test suite (11 tests) |
+| `npm test` | Run Jest test suite (29 tests across 4 suites) |
 
 ### Frontend (`code/frontend`)
 
@@ -150,74 +146,104 @@ CI=true npm run build
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET  | `/api/services`      | Public       | Active services only |
-| GET  | `/api/services/all`  | Manager/Admin (2,3) | All services including inactive |
-| GET  | `/api/service/:id`   | Manager/Admin (2,3) | Single service |
-| POST | `/api/service`       | Manager/Admin (2,3) | Create service |
-| PUT  | `/api/service`       | Manager/Admin (2,3) | Update service (deactivate with `active_service: 0`) |
+| GET  | `/api/services`       | Public          | Active services only |
+| GET  | `/api/services/all`   | Manager/Admin   | All including inactive |
+| GET  | `/api/service/:id`    | Manager/Admin   | Single service |
+| POST | `/api/service`        | Manager/Admin   | Create service |
+| PUT  | `/api/service`        | Manager/Admin   | Update / deactivate (`active_service: 0`) |
+
+### Customers
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET  | `/api/customers?search=&limit=&offset=` | Manager/Admin | List with ILIKE search + pagination; returns `{data, total}` |
+| GET  | `/api/customer/:id`  | Manager/Admin | Customer + their vehicles |
+| POST | `/api/customer`      | Manager/Admin | Create customer (transaction); 409 on duplicate email/phone |
+| PUT  | `/api/customer`      | Manager/Admin | Update customer; 409 on duplicate email/phone |
+
+### Vehicles
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET  | `/api/vehicles/:customer_id` | Manager/Admin | All vehicles for a customer |
+| GET  | `/api/vehicle/:id`           | Manager/Admin | Single vehicle |
+| POST | `/api/vehicle`               | Manager/Admin | Create vehicle; 404 if customer not found |
+| PUT  | `/api/vehicle`               | Manager/Admin | Update vehicle |
 
 ---
 
 ## Testing locally with curl
 
-### Login
 ```bash
+# Login
 curl -s -X POST http://localhost:8000/api/employee/login \
   -H "Content-Type: application/json" \
   -d '{"employee_email":"admin@garage.com","employee_password":"StrongPass1!"}' \
   | python -m json.tool
-```
 
-### Get active services (public)
-```bash
-curl -s http://localhost:8000/api/services | python -m json.tool
-```
-
-### Create a service (manager/admin)
-```bash
+# Save the token
 TOKEN="eyJ..."
-curl -s -X POST http://localhost:8000/api/service \
-  -H "Content-Type: application/json" \
-  -H "x-access-token: $TOKEN" \
-  -d '{"service_name":"Oil Change","service_description":"Full synthetic oil change with filter."}' \
-  | python -m json.tool
-```
 
-### Update a service (deactivate)
-```bash
-curl -s -X PUT http://localhost:8000/api/service \
-  -H "Content-Type: application/json" \
-  -H "x-access-token: $TOKEN" \
-  -d '{"service_id":1,"active_service":0}' \
-  | python -m json.tool
-```
+# --- Customers ---
 
-### Get all services including inactive (manager/admin)
-```bash
-curl -s http://localhost:8000/api/services/all \
+# List customers (search + pagination)
+curl -s "http://localhost:8000/api/customers?search=john&limit=10&offset=0" \
   -H "x-access-token: $TOKEN" | python -m json.tool
-```
 
-### Get all employees (admin)
-```bash
-curl -s http://localhost:8000/api/employees \
-  -H "x-access-token: $TOKEN" | python -m json.tool
-```
-
-### Add employee (admin)
-```bash
-curl -s -X POST http://localhost:8000/api/employee \
-  -H "Content-Type: application/json" \
-  -H "x-access-token: $TOKEN" \
+# Create customer
+curl -s -X POST http://localhost:8000/api/customer \
+  -H "Content-Type: application/json" -H "x-access-token: $TOKEN" \
   -d '{
-    "employee_email": "jane@garage.com",
-    "employee_first_name": "Jane",
-    "employee_last_name": "Doe",
-    "employee_phone": "555-123-4567",
-    "employee_password": "password12345",
-    "active_employee": 1,
-    "company_role_id": 1
+    "customer_email": "john@example.com",
+    "customer_phone_number": "555-123-4567",
+    "customer_first_name": "John",
+    "customer_last_name": "Doe"
   }' | python -m json.tool
+
+# Get customer + vehicles
+curl -s http://localhost:8000/api/customer/1 \
+  -H "x-access-token: $TOKEN" | python -m json.tool
+
+# Update customer (deactivate)
+curl -s -X PUT http://localhost:8000/api/customer \
+  -H "Content-Type: application/json" -H "x-access-token: $TOKEN" \
+  -d '{"customer_id":1,"active_customer_status":0}' | python -m json.tool
+
+# --- Vehicles ---
+
+# Add a vehicle
+curl -s -X POST http://localhost:8000/api/vehicle \
+  -H "Content-Type: application/json" -H "x-access-token: $TOKEN" \
+  -d '{
+    "customer_id": 1,
+    "vehicle_year": 2019,
+    "vehicle_make": "Toyota",
+    "vehicle_model": "Camry",
+    "vehicle_type": "Sedan",
+    "vehicle_mileage": 45000,
+    "vehicle_tag": "ABC-1234",
+    "vehicle_serial": "1HGBH41JXMN109186",
+    "vehicle_color": "Silver"
+  }' | python -m json.tool
+
+# Update a vehicle
+curl -s -X PUT http://localhost:8000/api/vehicle \
+  -H "Content-Type: application/json" -H "x-access-token: $TOKEN" \
+  -d '{"vehicle_id":1,"vehicle_mileage":48000}' | python -m json.tool
+
+# --- Services ---
+
+# List active services (public)
+curl -s http://localhost:8000/api/services | python -m json.tool
+
+# Create a service
+curl -s -X POST http://localhost:8000/api/service \
+  -H "Content-Type: application/json" -H "x-access-token: $TOKEN" \
+  -d '{"service_name":"Oil Change","service_description":"Full synthetic oil change."}' \
+  | python -m json.tool
+
+# Unknown API route → 404 JSON
+curl -s http://localhost:8000/api/does-not-exist | python -m json.tool
 ```
 
 ---
@@ -245,9 +271,10 @@ curl -s -X POST http://localhost:8000/api/employee \
 - `.env` and `.env.*` are git-ignored; only `.env.example` is committed.
 - No passwords or secrets in source code or git history.
 - Login rate-limited to 10 failed attempts per 15 minutes per IP (`skipSuccessfulRequests: true`).
-- `app.set('trust proxy', 1)` ensures the correct client IP is used for rate-limiting behind Render/Vercel.
+- `app.set('trust proxy', 1)` ensures the correct client IP behind Render/Vercel.
 - All responses include security headers via `helmet`.
-- Employee creation is wrapped in a database transaction.
-- Row Level Security (RLS) is enabled on all tables (backend connects as DB owner, so queries are unaffected).
-- Input is validated before reaching service/DB code; bad input returns 400, never 500.
-- JWT `exp` is checked client-side in `util/auth.js`; expired tokens are cleared from localStorage automatically.
+- Employee and customer creation wrapped in database transactions.
+- Row Level Security (RLS) enabled on all 13 tables.
+- Input validated before reaching service/DB code; bad input returns 400, never 500.
+- Unknown `/api` routes return 404 JSON (not an HTML error page).
+- JWT `exp` checked client-side; expired tokens cleared from localStorage automatically.
