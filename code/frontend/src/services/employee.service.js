@@ -7,11 +7,13 @@ const createEmployee = async (formData, token) =>
     body: JSON.stringify(formData),
   });
 
-const getAllEmployees = async (token) =>
-  fetch(`${api_url}/api/employees`, {
+const getAllEmployees = async (token, { limit = 20, offset = 0 } = {}) => {
+  const params = new URLSearchParams({ limit, offset });
+  return fetch(`${api_url}/api/employees?${params}`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json', 'x-access-token': token },
   });
+};
 
 const getEmployeeById = async (id, token) =>
   fetch(`${api_url}/api/employee/${id}`, {

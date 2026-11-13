@@ -76,7 +76,22 @@ async function getEmployeeByEmail(employee_email) {
 }
 
 /**
- * Fetch a single employee by id (no password hash).
+ * Lightweight auth query: fetch only what verifyToken needs.
+ * Uses the indexed employee_id PK — one join, no password hash.
+ * Returns { employee_id, active_employee, company_role_id } or null.
+ */
+async function getEmployeeForAuth(employee_id) {
+  const rows = await query(
+    `SELECT e.employee_id, e.active_employee, er.company_role_id
+       FROM employee e
+       JOIN employee_role er ON e.employee_id = er.employee_id
+      WHERE e.employee_id = $1`,
+    [employee_id],
+  );
+  return rows[0] || null;
+}
+
+/** Fetch a single employee by id (no password hash).
  * Returns null when not found.
  */
 async function getEmployeeById(employee_id) {
@@ -170,8 +185,16 @@ async function updateEmployee({
   }
 }
 
-/** Fetch the most recent 10 employees (no password hash). */
-async function getAllEmployees() {
+/** Fetch employees with pagination. Returns { data, total }. */
+async function getAllEmployees({ limit = 20, offset = 0 } = {}) {
+  const lim = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+  const off = Math.max(parseInt(offset, 10) || 0, 0);
+
+  const countRows = await query(
+    'SELECT COUNT(*) AS total FROM employee',
+  );
+  const total = parseInt(countRows[0].total, 10);
+
   const rows = await query(
     `SELECT
        e.employee_id,
@@ -188,9 +211,10 @@ async function getAllEmployees() {
      JOIN employee_role  er ON e.employee_id = er.employee_id
      JOIN company_roles  cr ON er.company_role_id = cr.company_role_id
      ORDER BY e.employee_id DESC
-     LIMIT 10`,
+     LIMIT $1 OFFSET $2`,
+    [lim, off],
   );
-  return rows;
+  return { data: rows, total };
 }
 
 module.exports = {
@@ -198,6 +222,7 @@ module.exports = {
   createEmployee,
   getEmployeeByEmail,
   getEmployeeById,
+  getEmployeeForAuth,
   updateEmployee,
   getAllEmployees,
 };

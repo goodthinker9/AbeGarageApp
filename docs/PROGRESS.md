@@ -81,3 +81,59 @@ See git commit `f795d65`.
 Empty stubs present: `order.routes.js`, `order.controller.js`, `order.service.js`.
 
 ## Step 6 — Deployment: Render + Vercel (NOT STARTED)
+
+---
+
+## Step 4b — verifyToken DB check + mocked tests + employee pagination (DONE ✓)
+
+### 1. Backend – verifyToken security
+
+| Task | Status |
+|------|--------|
+| `verifyToken` loads the employee from the DB on every request (one indexed PK query + role join) | ✓ |
+| Returns 401 if employee not found | ✓ |
+| Returns 401 if `active_employee = 0` (immediate effect on deactivated accounts) | ✓ |
+| `req.employee_role` and `req.employee_id` set from **DB values**, not token claims | ✓ |
+| `isAdmin` simplified to synchronous role check on `req.employee_role` (no extra DB call) | ✓ |
+| `isManagerOrAdmin` unchanged (was already synchronous) | ✓ |
+| `getEmployeeForAuth(employee_id)` added to `employee.service.js` — single indexed query | ✓ |
+
+### 2. Backend – tests (mocked, no real DB required)
+
+| Task | Status |
+|------|--------|
+| `jest.mock('../services/employee.service')` added to all test files that use `verifyToken` | ✓ |
+| `beforeEach` sets default `getEmployeeForAuth` mock (active, role 2 or 3) in each file | ✓ |
+| `employee_edit.test.js` rewritten: inactive employee → 401, demoted employee → 403, deleted employee → 401, self-deactivation → 400, self-demotion → 400, pagination params passed to service | ✓ |
+| All existing tests pass with mocked service (no real DB needed in CI) | ✓ |
+| `npm test` result: **6 suites, 55 tests, 55 passed** (exit 0) | ✓ |
+
+### 3. Backend – GET /api/employees pagination
+
+| Task | Status |
+|------|--------|
+| `getAllEmployees` accepts `{limit, offset}`, default 20, max 100; returns `{data, total}` | ✓ |
+| `GET /api/employees?limit=&offset=` passes query params to service | ✓ |
+
+### 4. Frontend – EmployeesList pagination
+
+| Task | Status |
+|------|--------|
+| `EmployeesList` has Previous / Next pagination using `limit=10&offset=` | ✓ |
+| Pagination controls only shown when there is more than one page | ✓ |
+| `employee.service.js` `getAllEmployees` accepts `{limit, offset}` and appends to URL | ✓ |
+
+### 5. Frontend – Dashboard + Orders
+
+| Task | Status |
+|------|--------|
+| Orders card on dashboard shows "coming soon" label and is non-clickable (grey) | ✓ |
+| `Orders.js` page shows a "coming soon" message with AdminMenu layout | ✓ |
+
+### 6. Docs
+
+| Task | Status |
+|------|--------|
+| `docs/DECISIONS.md`: why verifyToken checks the DB, why jest.mock, why Orders is coming soon | ✓ |
+| `docs/PROGRESS.md` updated (this section) | ✓ |
+| `CI=true npm run build` result: **Compiled successfully.** (exit 0, zero warnings) | ✓ |

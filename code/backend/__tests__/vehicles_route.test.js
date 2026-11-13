@@ -21,6 +21,21 @@ process.env.JWT_SECRET   = process.env.JWT_SECRET   || 'test-secret-at-least-32-
 process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://skip';
 process.env.FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
+// Mock employee service so verifyToken never touches the real DB.
+jest.mock('../services/employee.service');
+const employeeService = require('../services/employee.service');
+
+beforeEach(() => {
+  jest.resetAllMocks();
+  employeeService.getEmployeeForAuth.mockResolvedValue({
+    employee_id: 1,
+    active_employee: 1,
+    company_role_id: 2,  // manager – enough for vehicle/customer routes
+  });
+  // getAllCustomers is called by the "%" search tests
+  employeeService.getAllCustomers = undefined; // not a service function; customer service is separate
+});
+
 const request  = require('supertest');
 const app      = require('../app');
 const { SignJWT } = require('jose');

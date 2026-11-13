@@ -105,3 +105,31 @@ If the last admin deactivates or demotes their own account, there is no way to l
 The file was empty and not imported anywhere. Keeping empty placeholder files in the repository creates confusion about whether they are "done", "in progress", or simply dead code.
 
 The values in `src/config/garage.js` (address, phone, hours, highlights) are placeholders marked with "TODO: confirm with client" comments. They will be updated once the client provides the real information. Fabricated marketing claims (certifications, warranties) have been removed to avoid misrepresenting the business.
+
+## Why does verifyToken now load the employee from the DB on every request?
+
+**Problem with the previous approach:** The JWT was self-contained — it encoded `employee_role` and `active_employee` at login time. If an admin demoted an employee from role 3 to role 1, that employee's existing token still claimed role 3 for up to 24 hours. Similarly, deactivating an account had no immediate effect on in-flight tokens.
+
+**Fix:** After verifying the JWT signature, `verifyToken` runs one indexed query (`employee_id` PK + single join to `employee_role`) to get the current `company_role_id` and `active_employee` flag from the database. If the employee is not found or is inactive, it returns 401 immediately. `req.employee_role` is set from the DB value, not the token claim. `isAdmin` and `isManagerOrAdmin` then check that in-memory value — no second DB query.
+
+**Cost:** One extra indexed PK lookup per authenticated request. With a connection pool and Supabase's session-mode pooler this is a single round-trip on an already-open connection, typically under 2 ms. Acceptable for a garage management system of this scale.
+
+**Alternative considered:** Short token lifetime (5–15 min) + refresh tokens. This is the standard stateless approach but requires a refresh-token store and client-side refresh logic — significantly more complexity for a small internal tool. The DB-check approach is simpler, correct, and easy to audit.
+
+## Why use jest.mock on employee.service in tests?
+
+Before Step 4b, `verifyToken` only decoded the JWT signature — no DB call. After the change it always calls `employeeService.getEmployeeForAuth`. Tests that set `DATABASE_URL=postgresql://skip` would fail with 500 (pg connection error) whenever a valid token was used, making it impossible to test validation logic hermetically.
+
+`jest.mock('../services/employee.service')` replaces the entire module with auto-generated mocks. Each test file sets a default `getEmployeeForAuth` return value in `beforeEach`, so every request with a valid token "sees" an active employee without touching the real database. Integration tests that need real DB calls can override the mock or skip on `postgresql://skip`.
+
+## Why keep isAdmin / isManagerOrAdmin as separate middleware?
+
+`verifyToken` populates `req.employee_role` from the DB. The role-check middleware (`isAdmin`, `isManagerOrAdmin`) are synchronous one-liners that read that value. Keeping them separate from `verifyToken` preserves the ability to mix roles on different routes in the same router (e.g., one route allows managers, another requires admin) without duplicating the DB-lookup logic.
+
+## Why is the Orders page "coming soon"?
+
+The Orders module has significant data requirements (linking employees, customers, vehicles, and services) and its own status-workflow logic. Building it correctly in the same step as the security refactor would make the diff unreviable. Shipping a placeholder page with a clear label is preferable to either: (a) an empty page that crashes, or (b) silently hiding the Orders link from the navigation and dashboard. The card on the dashboard is visually distinct (grey, non-clickable) so users know the feature is planned.
+
+## Why not confirm garage.js content?
+
+The values in `src/config/garage.js` (address, phone, hours, highlights) are placeholders marked with "TODO: confirm with client" comments. They will be updated once the client provides the real information. Fabricated marketing claims (certifications, warranties) have been removed to avoid misrepresenting the business.

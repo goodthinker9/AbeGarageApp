@@ -116,7 +116,7 @@ CI=true npm run build
 | `npm run dev` | Start with Node `--watch` |
 | `npm run db:setup` | Apply the Postgres schema (idempotent) |
 | `npm run seed:admin` | Create the first admin employee |
-| `npm test` | Run Jest test suite (29 tests across 4 suites) |
+| `npm test` | Run Jest test suite (55 tests across 6 suites) |
 
 ### Frontend (`code/frontend`)
 
@@ -140,7 +140,7 @@ CI=true npm run build
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | POST | `/api/employee` | Admin (3) | Create employee |
-| GET  | `/api/employees` | Admin (3) | List employees (last 10) |
+| GET  | `/api/employees` | Admin (3) | List employees; supports `?limit=&offset=` (default 20, max 100); returns `{data, total}` |
 | GET  | `/api/employee/:id` | Admin (3) | Single employee (no password hash) |
 | PUT  | `/api/employee` | Admin (3) | Update employee; 400 if admin tries to deactivate/demote self |
 

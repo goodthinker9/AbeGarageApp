@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../../Contexts/AuthContext';
 import AdminMenu from '../../components/Admin/AdminMenu/AdminMenu';
 
-/** Cards shown per role.
- * role 1 = Employee, 2 = Manager, 3 = Admin
- * Each card: { label, to, minRole }
+/**
+ * Cards shown per role (1 = Employee, 2 = Manager, 3 = Admin).
+ * comingSoon: true → renders a disabled card instead of a link.
  */
 const CARDS = [
-  { label: 'Orders',       to: '/admin/orders',       minRole: 1 },
+  { label: 'Orders',       to: '/admin/orders',       minRole: 1, comingSoon: true },
   { label: 'Customers',    to: '/admin/customers',    minRole: 2 },
   { label: 'Add Customer', to: '/admin/add-customer', minRole: 2 },
   { label: 'Services',     to: '/admin/services',     minRole: 2 },
@@ -18,6 +18,17 @@ const CARDS = [
 ];
 
 const ROLE_NAMES = { 1: 'Employee', 2: 'Manager', 3: 'Admin' };
+
+const cardBase = {
+  display: 'block',
+  borderRadius: '6px',
+  padding: '1.5rem 1.25rem',
+  textAlign: 'center',
+  fontWeight: 600,
+  fontSize: '1rem',
+  textDecoration: 'none',
+  boxShadow: 'rgba(149,157,165,0.15) 0px 4px 12px',
+};
 
 function AdminDashboard() {
   const { employee } = useAuth();
@@ -44,29 +55,46 @@ function AdminDashboard() {
               </div>
 
               <div className="row clearfix">
-                {cards.map(({ label, to }) => (
+                {cards.map(({ label, to, comingSoon }) => (
                   <div key={to} className="col-sm-6 col-md-4" style={{ marginBottom: '1.25rem' }}>
-                    <Link
-                      to={to}
-                      style={{
-                        display: 'block',
-                        background: '#fff',
-                        border: '1px solid #dfe2ec',
-                        borderRadius: '6px',
-                        padding: '1.5rem 1.25rem',
-                        textAlign: 'center',
-                        color: '#222b48',
-                        fontWeight: 600,
-                        fontSize: '1rem',
-                        textDecoration: 'none',
-                        boxShadow: 'rgba(149,157,165,0.15) 0px 4px 12px',
-                        transition: 'box-shadow 0.2s, background 0.2s',
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = '#222b48'; e.currentTarget.style.color = '#fff'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#222b48'; }}
-                    >
-                      {label}
-                    </Link>
+                    {comingSoon ? (
+                      <div
+                        style={{
+                          ...cardBase,
+                          background: '#f4f5f7',
+                          border: '1px solid #dfe2ec',
+                          color: '#999',
+                          cursor: 'not-allowed',
+                        }}
+                        title="Coming soon"
+                      >
+                        {label}
+                        <span style={{ display: 'block', fontSize: '0.75rem', marginTop: '0.3rem', color: '#bbb' }}>
+                          coming soon
+                        </span>
+                      </div>
+                    ) : (
+                      <Link
+                        to={to}
+                        style={{
+                          ...cardBase,
+                          background: '#fff',
+                          border: '1px solid #dfe2ec',
+                          color: '#222b48',
+                          transition: 'box-shadow 0.2s, background 0.2s',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#222b48';
+                          e.currentTarget.style.color = '#fff';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#fff';
+                          e.currentTarget.style.color = '#222b48';
+                        }}
+                      >
+                        {label}
+                      </Link>
+                    )}
                   </div>
                 ))}
               </div>

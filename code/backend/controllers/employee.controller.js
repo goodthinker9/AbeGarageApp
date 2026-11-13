@@ -22,8 +22,8 @@ async function createEmployee(req, res, next) {
 /** GET /api/employees */
 async function getAllEmployees(req, res, next) {
   try {
-    const employees = await employeeService.getAllEmployees();
-    return res.status(200).json({ status: 'success', data: employees });
+    const result = await employeeService.getAllEmployees(req.query);
+    return res.status(200).json({ status: 'success', data: result.data, total: result.total });
   } catch (err) {
     next(err);
   }
