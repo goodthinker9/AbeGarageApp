@@ -41,14 +41,23 @@ function isPositiveInt(value) {
 // ── Generic ──────────────────────────────────────────────────────────────────
 
 /**
- * validateIdParam – use on any route with :id.
- * Rejects non-positive-integer path params with 400.
+ * validateIdParam(paramName?)
+ *
+ * Factory that returns a middleware validating a named route parameter.
+ * Defaults to 'id' so existing routes that use :id need no changes.
+ *
+ * Usage:
+ *   router.get('/api/customer/:id',              validateIdParam())
+ *   router.get('/api/vehicles/:customer_id',     validateIdParam('customer_id'))
  */
-function validateIdParam(req, res, next) {
-  if (!isPositiveInt(req.params.id)) {
-    return fail(res, [{ field: 'id', message: 'id must be a positive integer.' }]);
-  }
-  next();
+function validateIdParam(paramName = 'id') {
+  return function (req, res, next) {
+    const value = req.params[paramName];
+    if (!isPositiveInt(value)) {
+      return fail(res, [{ field: paramName, message: `${paramName} must be a positive integer.` }]);
+    }
+    next();
+  };
 }
 
 // ── Auth ─────────────────────────────────────────────────────────────────────

@@ -15,7 +15,7 @@ router.get('/api/services', serviceController.getActiveServices);
 router.get('/api/services/all', [verifyToken, isManagerOrAdmin], serviceController.getAllServices);
 
 // STAFF – single service by id
-router.get('/api/service/:id', [verifyToken, isManagerOrAdmin, validateIdParam], serviceController.getServiceById);
+router.get('/api/service/:id', [verifyToken, isManagerOrAdmin, validateIdParam()], serviceController.getServiceById);
 
 // STAFF – create service
 router.post('/api/service', [verifyToken, isManagerOrAdmin, validateCreateService], serviceController.createService);

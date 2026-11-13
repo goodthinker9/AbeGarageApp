@@ -34,7 +34,8 @@ describe('GET /api/vehicles/:customer_id — auth + validation', () => {
       .get('/api/vehicles/xyz')
       .set('x-access-token', token);
     expect(res.status).toBe(400);
-    expect(res.body.errors[0].field).toBe('id');
+    // param is named customer_id, so the error field must reflect that
+    expect(res.body.errors[0].field).toBe('customer_id');
   });
 });
 

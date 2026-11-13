@@ -16,13 +16,19 @@ async function getAllCustomers({ search = '', limit = 20, offset = 0 } = {}) {
   const params = [];
 
   if (search && search.trim()) {
-    const pattern = `%${search.trim()}%`;
+    // Escape ILIKE special characters so a literal % or _ in the search term
+    // matches itself and does not act as a wildcard.
+    const escaped = search.trim()
+      .replace(/\\/g, '\\\\')   // backslash first
+      .replace(/%/g,  '\\%')    // percent wildcard
+      .replace(/_/g,  '\\_');   // underscore wildcard
+    const pattern = `%${escaped}%`;
     params.push(pattern, pattern, pattern, pattern);
     whereClause = `
-      WHERE ci.customer_first_name ILIKE $1
-         OR ci.customer_last_name  ILIKE $2
-         OR c.customer_email       ILIKE $3
-         OR c.customer_phone_number ILIKE $4`;
+      WHERE (ci.customer_first_name  ILIKE $1 ESCAPE '\\'
+          OR ci.customer_last_name   ILIKE $2 ESCAPE '\\'
+          OR c.customer_email        ILIKE $3 ESCAPE '\\'
+          OR c.customer_phone_number ILIKE $4 ESCAPE '\\')`;
   }
 
   const countParams = [...params];
