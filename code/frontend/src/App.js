@@ -10,19 +10,23 @@ import Contact      from './markup/pages/Contact';
 import Unauthorized from './markup/pages/Unauthorized';
 import NotFound     from './markup/pages/404';
 
-// Admin pages – employees
-import AddEmployee from './markup/pages/admin/AddEmployee';
-import Employees   from './markup/pages/admin/Employees';
+// Admin – shared
+import AdminDashboard from './markup/pages/admin/AdminDashboard';
 
-// Admin pages – orders
+// Admin – employees
+import AddEmployee  from './markup/pages/admin/AddEmployee';
+import Employees    from './markup/pages/admin/Employees';
+import EditEmployee from './markup/pages/admin/EditEmployee';
+
+// Admin – orders
 import Orders from './markup/pages/admin/Orders';
 
-// Admin pages – services
+// Admin – services
 import AdminServices from './markup/pages/admin/AdminServices';
 import AddService    from './markup/pages/admin/AddService';
 import EditService   from './markup/pages/admin/EditService';
 
-// Admin pages – customers & vehicles
+// Admin – customers & vehicles
 import AdminCustomers from './markup/pages/admin/AdminCustomers';
 import AddCustomer    from './markup/pages/admin/AddCustomer';
 import EditCustomer   from './markup/pages/admin/EditCustomer';
@@ -55,6 +59,11 @@ function App() {
         <Route path="/services"     element={<Services />} />
         <Route path="/contact"      element={<Contact />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
+
+        {/* Admin dashboard – all logged-in staff */}
+        <Route path="/admin" element={
+          <PrivateAuthRoute roles={[1, 2, 3]}><AdminDashboard /></PrivateAuthRoute>
+        } />
 
         {/* Admin – all employees (role 1,2,3) */}
         <Route path="/admin/orders" element={
@@ -93,6 +102,9 @@ function App() {
         } />
         <Route path="/admin/add-employee" element={
           <PrivateAuthRoute roles={[3]}><AddEmployee /></PrivateAuthRoute>
+        } />
+        <Route path="/admin/employee/edit/:id" element={
+          <PrivateAuthRoute roles={[3]}><EditEmployee /></PrivateAuthRoute>
         } />
 
         {/* 404 */}

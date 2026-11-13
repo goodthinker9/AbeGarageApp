@@ -50,6 +50,7 @@ function AdminServices() {
               {error   && <p style={{ color: 'red' }}>{error}</p>}
 
               {!loading && !error && (
+                <div className="admin-table-wrapper">
                 <table className="table table-striped table-bordered">
                   <thead>
                     <tr>
@@ -83,6 +84,7 @@ function AdminServices() {
                     )}
                   </tbody>
                 </table>
+                </div>
               )}
             </div>
           </section>

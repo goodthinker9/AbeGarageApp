@@ -88,6 +88,20 @@ The server validates the JWT signature on every protected request. But if a toke
 
 The 401→logout+redirect pattern was duplicated in every admin page. Extracting it into one hook keeps each page focused on its own data while ensuring consistent session-expiry handling everywhere. The hook is defined but pages can also handle 401 inline (as AdminCustomers does directly) — the hook is available for future use.
 
-## Why not confirm garage.js content?
+## Why put validation before isAdmin in employee edit routes?
+
+`isAdmin` calls `getEmployeeByEmail` which hits the database. If the validation middleware runs after `isAdmin`, a request with a malformed body would receive a 500 (DB connection error in test/CI environments without a real DB) instead of a 400. Moving `validateUpdateEmployee` and `validateIdParam` before `isAdmin` ensures that bad client input is caught immediately, before any DB round-trip, returning a clear 400. The token verification (`verifyToken`) still runs first so unauthenticated requests still get 401/403.
+
+## Why populate req.employee_id in verifyToken?
+
+The JWT payload already contains `employee_id` from the sign step. Storing it on `req` in `verifyToken` (alongside `req.employee_role` and `req.employee_email`) makes it available to all downstream middleware and controllers without an extra DB lookup. The employee edit controller uses it to implement the self-protection check (an admin cannot deactivate or demote their own account).
+
+## Why prevent an admin from deactivating or demoting their own account?
+
+If the last admin deactivates or demotes their own account, there is no way to log in and restore access through the application — the system would need direct DB intervention to recover. This check is a simple guard against accidental lockout. It is enforced in the controller (after auth and validation) using the `req.employee_id` populated from the JWT.
+
+## Why delete BottomBanner.js?
+
+The file was empty and not imported anywhere. Keeping empty placeholder files in the repository creates confusion about whether they are "done", "in progress", or simply dead code.
 
 The values in `src/config/garage.js` (address, phone, hours, highlights) are placeholders marked with "TODO: confirm with client" comments. They will be updated once the client provides the real information. Fabricated marketing claims (certifications, warranties) have been removed to avoid misrepresenting the business.

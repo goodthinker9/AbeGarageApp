@@ -156,6 +156,46 @@ function validateUpdateService(req, res, next) {
   next();
 }
 
+// ── Employee update ───────────────────────────────────────────────────────────
+
+function validateUpdateEmployee(req, res, next) {
+  const {
+    employee_id, employee_first_name, employee_last_name,
+    employee_phone, active_employee, company_role_id,
+  } = req.body || {};
+  const errors = [];
+
+  if (!employee_id || !isPositiveInt(employee_id)) {
+    errors.push({ field: 'employee_id', message: 'employee_id must be a positive integer.' });
+  }
+
+  const hasUpdate = [
+    employee_first_name, employee_last_name, employee_phone,
+    active_employee, company_role_id,
+  ].some((v) => v !== undefined);
+  if (!hasUpdate) {
+    errors.push({ message: 'At least one field to update must be provided.' });
+  }
+
+  if (employee_first_name !== undefined) checkText(employee_first_name, 'employee_first_name', errors, { required: true });
+  if (employee_last_name  !== undefined) checkText(employee_last_name,  'employee_last_name',  errors, { required: true });
+  if (employee_phone      !== undefined) checkText(employee_phone,      'employee_phone',      errors, { required: true });
+
+  if (active_employee !== undefined && ![0, 1].includes(Number(active_employee))) {
+    errors.push({ field: 'active_employee', message: 'active_employee must be 0 or 1.' });
+  }
+
+  if (company_role_id !== undefined) {
+    const roleId = Number(company_role_id);
+    if (![1, 2, 3].includes(roleId)) {
+      errors.push({ field: 'company_role_id', message: 'company_role_id must be 1, 2, or 3.' });
+    }
+  }
+
+  if (errors.length) return fail(res, errors);
+  next();
+}
+
 // ── Customers ────────────────────────────────────────────────────────────────
 
 function validateCreateCustomer(req, res, next) {
@@ -305,6 +345,7 @@ module.exports = {
   validateIdParam,
   validateLogin,
   validateCreateEmployee,
+  validateUpdateEmployee,
   validateCreateService,
   validateUpdateService,
   validateCreateCustomer,

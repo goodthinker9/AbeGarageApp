@@ -260,3 +260,52 @@ input:disabled {
 .change-status {
   cursor: pointer;
 }
+
+/* ── Responsive admin layout ───────────────────────────────────────────────── */
+
+/* Horizontally scrollable tables on small screens */
+.admin-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Stack sidebar above content on phones */
+@media (max-width: 767px) {
+  .admin-pages .admin-left-side {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+  .admin-pages .admin-right-side {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+  .admin-left-side .list-group {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .admin-left-side .list-group-item {
+    flex: 1 1 calc(50% - 2px);
+    text-align: center;
+    font-size: 0.85rem;
+    padding: 0.5rem 0.25rem;
+  }
+  /* Validation errors on a new line instead of floating right */
+  .validation-error {
+    float: none;
+    display: block;
+    margin-top: 2px;
+  }
+  /* Dashboard cards: 2-up on small screens */
+  .admin-pages .col-sm-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-left-side .list-group-item {
+    flex: 1 1 100%;
+  }
+}

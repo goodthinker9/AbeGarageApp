@@ -17,7 +17,8 @@ const verifyToken = async (req, res, next) => {
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     const { payload } = await jwtVerify(token, secret);
     req.employee_email = payload.employee_email;
-    req.employee_role  = payload.employee_role;   // cached from token
+    req.employee_role  = payload.employee_role;
+    req.employee_id    = payload.employee_id;   // needed for self-action checks
     next();
   } catch (err) {
     return res.status(401).json({ status: 'fail', message: 'Unauthorized.' });

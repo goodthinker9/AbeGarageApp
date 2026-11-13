@@ -140,7 +140,9 @@ CI=true npm run build
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | POST | `/api/employee` | Admin (3) | Create employee |
-| GET  | `/api/employees` | Admin (3) | List employees |
+| GET  | `/api/employees` | Admin (3) | List employees (last 10) |
+| GET  | `/api/employee/:id` | Admin (3) | Single employee (no password hash) |
+| PUT  | `/api/employee` | Admin (3) | Update employee; 400 if admin tries to deactivate/demote self |
 
 ### Services
 

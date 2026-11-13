@@ -163,6 +163,7 @@ function CustomerDetail() {
 
               {/* Vehicles table */}
               {customer.vehicles && customer.vehicles.length > 0 ? (
+                <div className="admin-table-wrapper">
                 <table className="table table-striped table-bordered">
                   <thead>
                     <tr>
@@ -191,6 +192,7 @@ function CustomerDetail() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               ) : (
                 <p>No vehicles on record for this customer.</p>
               )}

@@ -90,6 +90,7 @@ function AdminCustomers() {
 
               {!loading && !error && (
                 <>
+                  <div className="admin-table-wrapper">
                   <table className="table table-striped table-bordered">
                     <thead>
                       <tr>
@@ -132,6 +133,7 @@ function AdminCustomers() {
                     </tbody>
                   </table>
 
+                  </div>
                   {/* Pagination */}
                   <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                     <button className="theme-btn btn-style-one"

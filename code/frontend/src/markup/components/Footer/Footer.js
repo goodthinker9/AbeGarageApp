@@ -46,71 +46,52 @@ function Footer() {
         <div className="auto-container">
           <div className="widgets-inner-container">
             <div className="row clearfix">
+
+              {/* About blurb + hours */}
               <div className="footer-column col-lg-4">
                 <div className="widget widget_about">
-                  <div className="text">
-                    Quality auto repair you can trust. Honest pricing, certified technicians,
-                    and repairs done right the first time.
+                  <div className="text" style={{ marginBottom: '0.75rem' }}>
+                    {garageInfo.highlights.map((h) => (
+                      <div key={h} style={{ marginBottom: '0.25rem' }}>• {h}</div>
+                    ))}
+                  </div>
+                  <div className="text" style={{ color: '#ccc', fontSize: '0.9rem' }}>
+                    {garageInfo.hours}
                   </div>
                 </div>
               </div>
 
+              {/* Navigation links */}
               <div className="footer-column col-lg-4">
-                <div className="row">
-                  <div className="col-md-6">
-                    <div className="widget widget_links">
-                      <h4 className="widget_title">Useful Links</h4>
-                      <div className="widget-content">
-                        <ul className="list">
-                          <li><Link to="/">Home</Link></li>
-                          <li><Link to="/about">About Us</Link></li>
-                          <li><Link to="/services">Services</Link></li>
-                          <li><Link to="/contact">Contact Us</Link></li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="widget widget_links">
-                      <h4 className="widget_title">Our Services</h4>
-                      <div className="widget-content">
-                        <ul className="list">
-                          <li><Link to="/services">Performance Upgrade</Link></li>
-                          <li><Link to="/services">Transmission Service</Link></li>
-                          <li><Link to="/services">Brake Repair &amp; Service</Link></li>
-                          <li><Link to="/services">Engine Service &amp; Repair</Link></li>
-                          <li><Link to="/services">Tyres &amp; Wheels</Link></li>
-                        </ul>
-                      </div>
-                    </div>
+                <div className="widget widget_links">
+                  <h4 className="widget_title">Quick Links</h4>
+                  <div className="widget-content">
+                    <ul className="list">
+                      <li><Link to="/">Home</Link></li>
+                      <li><Link to="/about">About Us</Link></li>
+                      <li><Link to="/services">Services</Link></li>
+                      <li><Link to="/contact">Contact Us</Link></li>
+                    </ul>
                   </div>
                 </div>
               </div>
 
+              {/* Contact */}
               <div className="footer-column col-lg-4">
-                <div className="widget widget_newsletter">
-                  <h4 className="widget_title">Follow Us</h4>
-                  <div className="text">Stay connected for offers and updates.</div>
-                  <ul className="social-links">
-                    {/* Real social links – update hrefs when accounts exist */}
-                    <li>
-                      <a href="https://facebook.com" target="_blank" rel="noreferrer">
-                        <span className="fab fa-facebook-f" />
-                      </a>
+                <div className="widget">
+                  <h4 className="widget_title">Contact</h4>
+                  <ul className="list" style={{ listStyle: 'none', padding: 0 }}>
+                    <li style={{ marginBottom: '0.4rem' }}>{garageInfo.address}</li>
+                    <li style={{ marginBottom: '0.4rem' }}>
+                      <a href={`tel:${garageInfo.phone}`}>{garageInfo.phone}</a>
                     </li>
                     <li>
-                      <a href="https://linkedin.com" target="_blank" rel="noreferrer">
-                        <span className="fab fa-linkedin-in" />
-                      </a>
-                    </li>
-                    <li>
-                      <a href="https://twitter.com" target="_blank" rel="noreferrer">
-                        <span className="fab fa-twitter" />
-                      </a>
+                      <a href={`mailto:${garageInfo.email}`}>{garageInfo.email}</a>
                     </li>
                   </ul>
                 </div>
               </div>
+
             </div>
           </div>
         </div>
@@ -119,7 +100,7 @@ function Footer() {
       <div className="auto-container">
         <div className="footer-bottom">
           <div className="copyright-text">
-            © {new Date().getFullYear()} <Link to="/">Abe Garage</Link>. All rights reserved.
+            © {new Date().getFullYear()} <Link to="/">{garageInfo.name}</Link>. All rights reserved.
           </div>
         </div>
       </div>
