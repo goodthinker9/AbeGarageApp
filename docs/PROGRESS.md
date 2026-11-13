@@ -76,11 +76,50 @@ See git commit `f795d65`.
 
 ---
 
-## Step 5 — Orders + Status workflow + Public order page (NOT STARTED)
+## Step 5 — Orders (DONE ✓)
 
-Empty stubs present: `order.routes.js`, `order.controller.js`, `order.service.js`.
+### Part A – Backend
 
-## Step 6 — Deployment: Render + Vercel (NOT STARTED)
+| Task | Status |
+|------|--------|
+| `constants/orderStatus.js`: ORDER_STATUS 0/1/2 + names | ✓ |
+| `services/order.service.js`: `createOrder` (transaction: orders + order_info + order_services + order_status), `getAllOrders` (paginated, search, status filter, role-1 sees only own), `getOrderById` (full detail), `updateOrder` (transaction, replace services), `updateOrderStatus` (completion_date on 2, clear on backtrack), `updateOrderService` | ✓ |
+| `controllers/order.controller.js`: 6 handlers; ownership check for role 1 on get/status/service | ✓ |
+| `routes/order.routes.js`: POST/GET/GET:id/PUT/PUT:status/PUT:service | ✓ |
+| `validate.js`: `validateCreateOrder`, `validateUpdateOrder`, `validateOrderStatus`, `validateOrderServiceUpdate` | ✓ |
+| `GET /api/employees` changed from isAdmin to isManagerOrAdmin (managers need it for order assignment) | ✓ |
+| `__tests__/orders.test.js`: 26 tests (validation, role gating, ownership, status 0-2) | ✓ |
+
+### Part B – Frontend
+
+| Task | Status |
+|------|--------|
+| `src/constants/orderStatus.js` mirror | ✓ |
+| `src/services/order.service.js`: 6 API functions | ✓ |
+| `Orders.js` → admin orders list (search, status filter, pagination, status badges) | ✓ |
+| `AddOrder.js` → step-by-step form (search customer → select vehicle → tick services → employee → price/notes) | ✓ |
+| `OrderDetail.js` → full detail, service checkboxes, status dropdown, copy customer link | ✓ |
+| `EditOrder.js` → edit form (employee, price, date, notes, services, active toggle) | ✓ |
+| Dashboard Orders card works (comingSoon removed) | ✓ |
+| AdminMenu: Add Order link added | ✓ |
+| App.js: all new routes wired | ✓ |
+| 401 handling on all order pages | ✓ |
+
+### Part C – Docs + verification
+
+| Task | Status |
+|------|--------|
+| README updated with order endpoints + curl examples | ✓ |
+| PROGRESS.md updated (this section) | ✓ |
+| DECISIONS.md updated (status codes, no hard delete, transaction, role-1 ownership) | ✓ |
+| `npm test` result: **7 suites, 81 tests, 81 passed** (exit 0) | ✓ |
+| `CI=true npm run build` result: **Compiled successfully.** (exit 0, zero warnings) | ✓ |
+
+---
+
+## Step 6 — Public order status page + Deployment (NOT STARTED)
+
+Public `/order/:hash` page showing order status without login. Then deploy: Render (backend) + Vercel (frontend).
 
 ---
 

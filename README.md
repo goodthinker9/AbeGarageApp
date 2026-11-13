@@ -116,7 +116,7 @@ CI=true npm run build
 | `npm run dev` | Start with Node `--watch` |
 | `npm run db:setup` | Apply the Postgres schema (idempotent) |
 | `npm run seed:admin` | Create the first admin employee |
-| `npm test` | Run Jest test suite (55 tests across 6 suites) |
+| `npm test` | Run Jest test suite (81 tests across 7 suites) |
 
 ### Frontend (`code/frontend`)
 
@@ -140,7 +140,7 @@ CI=true npm run build
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | POST | `/api/employee` | Admin (3) | Create employee |
-| GET  | `/api/employees` | Admin (3) | List employees; supports `?limit=&offset=` (default 20, max 100); returns `{data, total}` |
+| GET  | `/api/employees` | Manager/Admin (2,3) | List employees; supports `?limit=&offset=` (default 20, max 100); returns `{data, total}` |
 | GET  | `/api/employee/:id` | Admin (3) | Single employee (no password hash) |
 | PUT  | `/api/employee` | Admin (3) | Update employee; 400 if admin tries to deactivate/demote self |
 
@@ -171,6 +171,17 @@ CI=true npm run build
 | GET  | `/api/vehicle/:id`           | Manager/Admin | Single vehicle |
 | POST | `/api/vehicle`               | Manager/Admin | Create vehicle; 404 if customer not found |
 | PUT  | `/api/vehicle`               | Manager/Admin | Update vehicle |
+
+### Orders
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/order` | Manager/Admin (2,3) | Create order (transaction); 201 with `{order_id, order_hash}` |
+| GET  | `/api/orders?limit=&offset=&status=&search=` | All (1,2,3) | Paginated list; role 1 sees only own; returns `{data, total}` |
+| GET  | `/api/order/:id` | All (1,2,3) | Full detail; role 1 only if assigned |
+| PUT  | `/api/order` | Manager/Admin (2,3) | Edit order_info, change employee, replace services, cancel (`active_order: 0`) |
+| PUT  | `/api/order/:id/status` | All (1,2,3) | Set status 0/1/2; role 1 only own; 2 sets completion_date |
+| PUT  | `/api/order/:id/service` | All (1,2,3) | Toggle `service_completed`; role 1 only own |
 
 ---
 

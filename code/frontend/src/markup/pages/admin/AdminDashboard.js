@@ -8,7 +8,7 @@ import AdminMenu from '../../components/Admin/AdminMenu/AdminMenu';
  * comingSoon: true → renders a disabled card instead of a link.
  */
 const CARDS = [
-  { label: 'Orders',       to: '/admin/orders',       minRole: 1, comingSoon: true },
+  { label: 'Orders',       to: '/admin/orders',       minRole: 1 },
   { label: 'Customers',    to: '/admin/customers',    minRole: 2 },
   { label: 'Add Customer', to: '/admin/add-customer', minRole: 2 },
   { label: 'Services',     to: '/admin/services',     minRole: 2 },

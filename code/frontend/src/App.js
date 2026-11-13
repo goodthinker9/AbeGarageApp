@@ -19,7 +19,10 @@ import Employees    from './markup/pages/admin/Employees';
 import EditEmployee from './markup/pages/admin/EditEmployee';
 
 // Admin – orders
-import Orders from './markup/pages/admin/Orders';
+import Orders      from './markup/pages/admin/Orders';
+import AddOrder    from './markup/pages/admin/AddOrder';
+import OrderDetail from './markup/pages/admin/OrderDetail';
+import EditOrder   from './markup/pages/admin/EditOrder';
 
 // Admin – services
 import AdminServices from './markup/pages/admin/AdminServices';
@@ -69,8 +72,17 @@ function App() {
         <Route path="/admin/orders" element={
           <PrivateAuthRoute roles={[1, 2, 3]}><Orders /></PrivateAuthRoute>
         } />
+        <Route path="/admin/order/:id" element={
+          <PrivateAuthRoute roles={[1, 2, 3]}><OrderDetail /></PrivateAuthRoute>
+        } />
 
         {/* Admin – managers + admins (role 2,3) */}
+        <Route path="/admin/add-order" element={
+          <PrivateAuthRoute roles={[2, 3]}><AddOrder /></PrivateAuthRoute>
+        } />
+        <Route path="/admin/order/edit/:id" element={
+          <PrivateAuthRoute roles={[2, 3]}><EditOrder /></PrivateAuthRoute>
+        } />
         <Route path="/admin/customers" element={
           <PrivateAuthRoute roles={[2, 3]}><AdminCustomers /></PrivateAuthRoute>
         } />

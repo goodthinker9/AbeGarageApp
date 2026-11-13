@@ -7,11 +7,13 @@ const loginRoutes    = require('./login.routes');
 const serviceRoutes  = require('./service.routes');
 const customerRoutes = require('./customer.routes');
 const vehicleRoutes  = require('./vehicle.routes');
+const orderRoutes    = require('./order.routes');
 
 router.use(employeeRouter);
 router.use(loginRoutes);
 router.use(serviceRoutes);
 router.use(customerRoutes);
 router.use(vehicleRoutes);
+router.use(orderRoutes);
 
 module.exports = router;

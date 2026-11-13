@@ -11,10 +11,10 @@ router.post(
   employeeController.createEmployee,
 );
 
-// Get all employees – token + admin check
+// Get all employees – token + manager/admin (needed for order assignment dropdown)
 router.get(
   '/api/employees',
-  [authMiddleware.verifyToken, authMiddleware.isAdmin],
+  [authMiddleware.verifyToken, authMiddleware.isManagerOrAdmin],
   employeeController.getAllEmployees,
 );
 

@@ -71,12 +71,16 @@ describe('verifyToken — inactive / missing employee', () => {
 describe('Role enforcement after DB lookup', () => {
   it('returns 403 when a demoted employee (now role 2) hits an admin-only route', async () => {
     // Token was issued with role=3, but DB now says role=2
+    // GET /api/employee/:id is admin-only (isAdmin)
     employeeService.getEmployeeForAuth.mockResolvedValue({
       employee_id: 10, active_employee: 1, company_role_id: 2,
     });
+    employeeService.getEmployeeById = jest.fn().mockResolvedValue(null);
     const token = await makeToken({ role: 3 });
-    const res = await request(app).get('/api/employees').set('x-access-token', token);
-    expect(res.status).toBe(403);
+    const res = await request(app)
+      .get('/api/employee/1')
+      .set('x-access-token', token);
+    expect(res.status).toBe(403); // isAdmin blocks role 2
   });
 
   it('returns 403 when a plain employee (role 1) hits a manager-only route', async () => {

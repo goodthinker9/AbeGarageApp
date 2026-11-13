@@ -10,6 +10,7 @@ function AdminMenu() {
       <div className="list-group">
         <Link to="/admin"          className="list-group-item">Dashboard</Link>
         <Link to="/admin/orders"   className="list-group-item">Orders</Link>
+        <Link to="/admin/add-order" className="list-group-item">Add Order</Link>
         <Link to="/admin/customers"    className="list-group-item">Customers</Link>
         <Link to="/admin/add-customer" className="list-group-item">Add Customer</Link>
         <Link to="/admin/services"     className="list-group-item">Services</Link>

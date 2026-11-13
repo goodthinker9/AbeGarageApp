@@ -122,7 +122,21 @@ Before Step 4b, `verifyToken` only decoded the JWT signature — no DB call. Aft
 
 `jest.mock('../services/employee.service')` replaces the entire module with auto-generated mocks. Each test file sets a default `getEmployeeForAuth` return value in `beforeEach`, so every request with a valid token "sees" an active employee without touching the real database. Integration tests that need real DB calls can override the mock or skip on `postgresql://skip`.
 
-## Why keep isAdmin / isManagerOrAdmin as separate middleware?
+## Why status codes as constants?
+
+Hardcoding magic numbers (0, 1, 2) throughout the codebase is fragile — a typo or misremembered value causes silent bugs. A single constants file (`constants/orderStatus.js`) used by both the service and the controller (and mirrored on the frontend) makes the codes self-documenting and changeable in one place. The backend uses `module.exports`, the frontend uses `export const` — same values, different module syntax for each ecosystem.
+
+## Why no DELETE on orders?
+
+Orders are financial records. Deleting one would either cascade-delete order_info, order_services, and order_status (losing audit trail) or fail with a FK violation. Cancelling with `active_order = 0` preserves the record for reporting and history while hiding it from active views.
+
+## Why a transaction on createOrder?
+
+Creating an order inserts into four tables (orders, order_info, order_services, order_status). If the third insert fails, the database would have a partial order with no services or status. `BEGIN/COMMIT/ROLLBACK` guarantees that either all four tables are populated or none are.
+
+## Why does role 1 only see their own orders?
+
+An employee (role 1) should only see and interact with orders assigned to them. This is enforced at two levels: the `getAllOrders` service filters by `employee_id` when `employee_role === 1`, and the controller checks ownership on `getOrderById`, `updateOrderStatus`, and `updateOrderService` before allowing the operation. A manager or admin can see and update all orders.
 
 `verifyToken` populates `req.employee_role` from the DB. The role-check middleware (`isAdmin`, `isManagerOrAdmin`) are synchronous one-liners that read that value. Keeping them separate from `verifyToken` preserves the ability to mix roles on different routes in the same router (e.g., one route allows managers, another requires admin) without duplicating the DB-lookup logic.
 

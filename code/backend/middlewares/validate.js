@@ -341,6 +341,156 @@ function validateUpdateVehicle(req, res, next) {
   next();
 }
 
+// ── Orders ───────────────────────────────────────────────────────────────────
+
+/** Check an optional TEXT field (no 255-char limit, just type check). */
+function checkOptionalText(value, field, errors) {
+  if (value === undefined || value === null) return;
+  if (typeof value !== 'string') {
+    errors.push({ field, message: `${field} must be a string.` });
+  }
+}
+
+/** Validate service_ids: must be a non-empty array of positive integers. */
+function validateServiceIds(service_ids, errors) {
+  if (!service_ids || !Array.isArray(service_ids) || service_ids.length === 0) {
+    errors.push({ field: 'service_ids', message: 'At least one service is required.' });
+    return;
+  }
+  for (const sid of service_ids) {
+    if (!isPositiveInt(sid)) {
+      errors.push({ field: 'service_ids', message: 'All service_ids must be positive integers.' });
+      return;
+    }
+  }
+}
+
+/** Validate a non-negative integer field. */
+function validateNonNegInt(value, field, errors, { required = true } = {}) {
+  if (value === undefined || value === null) {
+    if (required) errors.push({ field, message: `${field} is required.` });
+    return;
+  }
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 0) {
+    errors.push({ field, message: `${field} must be a non-negative integer.` });
+  }
+}
+
+/** Validate an optional ISO date string. */
+function validateOptionalDate(value, field, errors) {
+  if (value === undefined || value === null || value === '') return;
+  if (typeof value !== 'string') {
+    errors.push({ field, message: `${field} must be a date string.` });
+    return;
+  }
+  const d = new Date(value);
+  if (isNaN(d.getTime())) {
+    errors.push({ field, message: `${field} must be a valid date.` });
+  }
+}
+
+function validateCreateOrder(req, res, next) {
+  const {
+    customer_id, vehicle_id, employee_id, service_ids,
+    order_total_price, estimated_completion_date,
+    additional_request, notes_for_internal_use, notes_for_customer,
+  } = req.body || {};
+  const errors = [];
+
+  if (!customer_id || !isPositiveInt(customer_id)) {
+    errors.push({ field: 'customer_id', message: 'customer_id must be a positive integer.' });
+  }
+  if (!vehicle_id || !isPositiveInt(vehicle_id)) {
+    errors.push({ field: 'vehicle_id', message: 'vehicle_id must be a positive integer.' });
+  }
+  if (!employee_id || !isPositiveInt(employee_id)) {
+    errors.push({ field: 'employee_id', message: 'employee_id must be a positive integer.' });
+  }
+
+  validateServiceIds(service_ids, errors);
+  validateNonNegInt(order_total_price, 'order_total_price', errors, { required: true });
+
+  validateOptionalDate(estimated_completion_date, 'estimated_completion_date', errors);
+  checkOptionalText(additional_request,       'additional_request',       errors);
+  checkOptionalText(notes_for_internal_use,   'notes_for_internal_use',   errors);
+  checkOptionalText(notes_for_customer,       'notes_for_customer',       errors);
+
+  if (errors.length) return fail(res, errors);
+  next();
+}
+
+function validateUpdateOrder(req, res, next) {
+  const {
+    order_id, employee_id, order_total_price, estimated_completion_date,
+    additional_request, notes_for_internal_use, notes_for_customer,
+    active_order, service_ids,
+  } = req.body || {};
+  const errors = [];
+
+  if (!order_id || !isPositiveInt(order_id)) {
+    errors.push({ field: 'order_id', message: 'order_id must be a positive integer.' });
+  }
+
+  const hasUpdate = [
+    employee_id, order_total_price, estimated_completion_date,
+    additional_request, notes_for_internal_use, notes_for_customer,
+    active_order, service_ids,
+  ].some((v) => v !== undefined);
+  if (!hasUpdate) {
+    errors.push({ message: 'At least one field to update must be provided.' });
+  }
+
+  if (employee_id !== undefined && !isPositiveInt(employee_id)) {
+    errors.push({ field: 'employee_id', message: 'employee_id must be a positive integer.' });
+  }
+  if (order_total_price !== undefined) {
+    validateNonNegInt(order_total_price, 'order_total_price', errors, { required: false });
+  }
+  if (estimated_completion_date !== undefined) validateOptionalDate(estimated_completion_date, 'estimated_completion_date', errors);
+  if (additional_request       !== undefined) checkOptionalText(additional_request,       'additional_request',       errors);
+  if (notes_for_internal_use   !== undefined) checkOptionalText(notes_for_internal_use,   'notes_for_internal_use',   errors);
+  if (notes_for_customer        !== undefined) checkOptionalText(notes_for_customer,        'notes_for_customer',        errors);
+  if (active_order !== undefined && ![0, 1].includes(Number(active_order))) {
+    errors.push({ field: 'active_order', message: 'active_order must be 0 or 1.' });
+  }
+  if (service_ids !== undefined) validateServiceIds(service_ids, errors);
+
+  if (errors.length) return fail(res, errors);
+  next();
+}
+
+function validateOrderStatus(req, res, next) {
+  const { order_status } = req.body || {};
+  const errors = [];
+
+  if (order_status === undefined || order_status === null) {
+    errors.push({ field: 'order_status', message: 'order_status is required.' });
+  } else if (![0, 1, 2].includes(Number(order_status))) {
+    errors.push({ field: 'order_status', message: 'order_status must be 0 (Received), 1 (In Progress), or 2 (Completed).' });
+  }
+
+  if (errors.length) return fail(res, errors);
+  next();
+}
+
+function validateOrderServiceUpdate(req, res, next) {
+  const { service_id, service_completed } = req.body || {};
+  const errors = [];
+
+  if (!service_id || !isPositiveInt(service_id)) {
+    errors.push({ field: 'service_id', message: 'service_id must be a positive integer.' });
+  }
+  if (service_completed === undefined || service_completed === null) {
+    errors.push({ field: 'service_completed', message: 'service_completed is required.' });
+  } else if (![0, 1].includes(Number(service_completed))) {
+    errors.push({ field: 'service_completed', message: 'service_completed must be 0 or 1.' });
+  }
+
+  if (errors.length) return fail(res, errors);
+  next();
+}
+
 module.exports = {
   validateIdParam,
   validateLogin,
@@ -352,4 +502,8 @@ module.exports = {
   validateUpdateCustomer,
   validateCreateVehicle,
   validateUpdateVehicle,
+  validateCreateOrder,
+  validateUpdateOrder,
+  validateOrderStatus,
+  validateOrderServiceUpdate,
 };
