@@ -240,7 +240,7 @@ describe('PUT /api/order/:id/status', () => {
     employeeService.getEmployeeForAuth.mockResolvedValue({
       employee_id: 5, active_employee: 1, company_role_id: 1,
     });
-    orderService.getOrderById.mockResolvedValue({ order_id: 1, employee_id: 5 });
+    orderService.getOrderById.mockResolvedValue({ order_id: 1, employee_id: 5, active_order: 1 });
     orderService.updateOrderStatus.mockResolvedValue({ order_id: 1, order_status: 2 });
     const token = await makeToken({ role: 1, employee_id: 5 });
     const res = await request(app).put('/api/order/1/status').set('x-access-token', token)
@@ -278,11 +278,74 @@ describe('PUT /api/order/:id/service', () => {
   });
 
   it('returns 200 on valid service toggle', async () => {
-    orderService.getOrderById.mockResolvedValue({ order_id: 1, employee_id: 10 });
+    orderService.getOrderById.mockResolvedValue({ order_id: 1, employee_id: 10, active_order: 1 });
     orderService.updateOrderService.mockResolvedValue({ order_service_id: 1, service_completed: 1 });
     const token = await makeToken();
     const res = await request(app).put('/api/order/1/service').set('x-access-token', token)
       .send({ service_id: 1, service_completed: 1 });
     expect(res.status).toBe(200);
+  });
+
+  it('returns 400 when updating status on a cancelled order', async () => {
+    orderService.getOrderById.mockResolvedValue({ order_id: 1, employee_id: 10, active_order: 0 });
+    const token = await makeToken();
+    const res = await request(app).put('/api/order/1/status').set('x-access-token', token)
+      .send({ order_status: 1 });
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/cancelled/i);
+  });
+
+  it('returns 400 when toggling service on a cancelled order', async () => {
+    orderService.getOrderById.mockResolvedValue({ order_id: 1, employee_id: 10, active_order: 0 });
+    const token = await makeToken();
+    const res = await request(app).put('/api/order/1/service').set('x-access-token', token)
+      .send({ service_id: 1, service_completed: 1 });
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/cancelled/i);
+  });
+});
+
+// ── Duplicate service_ids ─────────────────────────────────────────────────────
+describe('Duplicate service_ids', () => {
+  it('POST /api/order returns 400 for duplicate service_ids', async () => {
+    const token = await makeToken();
+    const res = await request(app).post('/api/order').set('x-access-token', token).send({
+      customer_id: 1, vehicle_id: 1, employee_id: 1,
+      service_ids: [1, 1, 2], order_total_price: 100,
+    });
+    expect(res.status).toBe(400);
+    const fields = res.body.errors.map((e) => e.field);
+    expect(fields).toContain('service_ids');
+  });
+
+  it('PUT /api/order returns 400 for duplicate service_ids', async () => {
+    const token = await makeToken();
+    const res = await request(app).put('/api/order').set('x-access-token', token).send({
+      order_id: 5, service_ids: [3, 3],
+    });
+    expect(res.status).toBe(400);
+    const fields = res.body.errors.map((e) => e.field);
+    expect(fields).toContain('service_ids');
+  });
+});
+
+// ── updateOrder service diff (mocked) ─────────────────────────────────────────
+describe('PUT /api/order — updateOrder with VALIDATION errors', () => {
+  it('returns 400 when service throws VALIDATION for unknown employee', async () => {
+    orderService.updateOrder.mockRejectedValue({ code: 'VALIDATION', field: 'employee_id', message: 'Employee not found or inactive.' });
+    const token = await makeToken();
+    const res = await request(app).put('/api/order').set('x-access-token', token)
+      .send({ order_id: 5, employee_id: 999 });
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/Employee not found/);
+  });
+
+  it('returns 400 when service throws VALIDATION for unknown service', async () => {
+    orderService.updateOrder.mockRejectedValue({ code: 'VALIDATION', field: 'service_ids', message: 'Service 999 not found or inactive.' });
+    const token = await makeToken();
+    const res = await request(app).put('/api/order').set('x-access-token', token)
+      .send({ order_id: 5, service_ids: [999] });
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/Service 999/);
   });
 });

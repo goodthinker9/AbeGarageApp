@@ -365,6 +365,15 @@ function validateServiceIds(service_ids, errors) {
   }
 }
 
+/** Dedupe service_ids and reject if duplicates were found. */
+function dedupeServiceIds(service_ids, errors) {
+  const unique = [...new Set(service_ids.map(Number))];
+  if (unique.length !== service_ids.length) {
+    errors.push({ field: 'service_ids', message: 'Duplicate service_ids are not allowed.' });
+  }
+  return unique;
+}
+
 /** Validate a non-negative integer field. */
 function validateNonNegInt(value, field, errors, { required = true } = {}) {
   if (value === undefined || value === null) {
@@ -409,6 +418,10 @@ function validateCreateOrder(req, res, next) {
   }
 
   validateServiceIds(service_ids, errors);
+  // Reject duplicate service_ids
+  if (service_ids && Array.isArray(service_ids) && service_ids.length > 0) {
+    dedupeServiceIds(service_ids, errors);
+  }
   validateNonNegInt(order_total_price, 'order_total_price', errors, { required: true });
 
   validateOptionalDate(estimated_completion_date, 'estimated_completion_date', errors);
@@ -454,7 +467,13 @@ function validateUpdateOrder(req, res, next) {
   if (active_order !== undefined && ![0, 1].includes(Number(active_order))) {
     errors.push({ field: 'active_order', message: 'active_order must be 0 or 1.' });
   }
-  if (service_ids !== undefined) validateServiceIds(service_ids, errors);
+  if (service_ids !== undefined) {
+    validateServiceIds(service_ids, errors);
+    // Reject duplicate service_ids in update too
+    if (service_ids && Array.isArray(service_ids) && service_ids.length > 0) {
+      dedupeServiceIds(service_ids, errors);
+    }
+  }
 
   if (errors.length) return fail(res, errors);
   next();

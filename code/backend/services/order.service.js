@@ -232,7 +232,11 @@ async function getOrderById(order_id) {
   return order;
 }
 
-/** Update order fields in a transaction. Returns updated order or null. */
+/** Update order fields in a transaction. Returns updated order or null.
+ *  Validates employee exists+active and services exist+active (400 on failure).
+ *  Smart service replacement: keeps existing rows and their service_completed flag,
+ *  inserts new rows, deletes only removed rows.
+ */
 async function updateOrder(data) {
   const {
     order_id, employee_id, order_total_price, estimated_completion_date,
@@ -248,6 +252,41 @@ async function updateOrder(data) {
     if (!check.rows.length) {
       await client.query('ROLLBACK');
       return null;
+    }
+
+    // Validate employee if provided
+    if (employee_id !== undefined) {
+      const emp = await client.query(
+        'SELECT employee_id FROM employee WHERE employee_id = $1 AND active_employee = 1',
+        [employee_id],
+      );
+      if (!emp.rows.length) {
+        await client.query('ROLLBACK');
+        throw { code: 'VALIDATION', field: 'employee_id', message: 'Employee not found or inactive.' };
+      }
+    }
+
+    // Validate new services if provided (services already on the order may stay even if deactivated)
+    if (service_ids !== undefined && Array.isArray(service_ids)) {
+      // Get existing service_ids on this order
+      const existing = await client.query(
+        'SELECT service_id FROM order_services WHERE order_id = $1',
+        [order_id],
+      );
+      const existingIds = new Set(existing.rows.map((r) => r.service_id));
+
+      for (const sid of service_ids) {
+        // Skip validation for services already on the order (they may have been deactivated since)
+        if (existingIds.has(Number(sid))) continue;
+        const svc = await client.query(
+          'SELECT service_id FROM common_services WHERE service_id = $1 AND active_service = 1',
+          [sid],
+        );
+        if (!svc.rows.length) {
+          await client.query('ROLLBACK');
+          throw { code: 'VALIDATION', field: 'service_ids', message: `Service ${sid} not found or inactive.` };
+        }
+      }
     }
 
     // Update orders table (employee, active_order)
@@ -281,15 +320,37 @@ async function updateOrder(data) {
       await client.query(`UPDATE order_info SET ${infoSets.join(', ')} WHERE order_id = $${jdx}`, infoParams);
     }
 
-    // Replace services if provided
+    // Smart service replacement: diff against existing rows
     if (service_ids !== undefined && Array.isArray(service_ids)) {
-      await client.query('DELETE FROM order_services WHERE order_id = $1', [order_id]);
-      for (const sid of service_ids) {
+      const newIds = [...new Set(service_ids.map(Number))]; // dedupe
+
+      // Get existing rows with their completed flags
+      const existingRows = await client.query(
+        'SELECT service_id, service_completed FROM order_services WHERE order_id = $1',
+        [order_id],
+      );
+      const existingMap = new Map(existingRows.rows.map((r) => [r.service_id, r.service_completed]));
+      const existingIdSet = new Set(existingMap.keys());
+      const newIdSet = new Set(newIds);
+
+      // Delete rows for services no longer in the list
+      const toDelete = [...existingIdSet].filter((id) => !newIdSet.has(id));
+      for (const sid of toDelete) {
+        await client.query(
+          'DELETE FROM order_services WHERE order_id = $1 AND service_id = $2',
+          [order_id, sid],
+        );
+      }
+
+      // Insert rows for new services not yet on the order
+      const toInsert = newIds.filter((id) => !existingIdSet.has(id));
+      for (const sid of toInsert) {
         await client.query(
           'INSERT INTO order_services (order_id, service_id, service_completed) VALUES ($1, $2, 0)',
           [order_id, sid],
         );
       }
+      // Rows for services that stay keep their existing service_completed flag — no action needed
     }
 
     await client.query('COMMIT');
@@ -302,11 +363,24 @@ async function updateOrder(data) {
   }
 }
 
-/** Update order status. Setting 2 sets completion_date; moving back from 2 clears it. */
+/** Update order status. Setting 2 sets completion_date; moving back from 2 clears it.
+ *  Blocks updates on cancelled orders (active_order = 0).
+ *  Returns { code: 'CANCELLED' } if cancelled, null if order not found.
+ */
 async function updateOrderStatus(order_id, newStatus) {
   const client = await getClient();
   try {
     await client.query('BEGIN');
+
+    const orderRow = await client.query('SELECT active_order FROM orders WHERE order_id = $1', [order_id]);
+    if (!orderRow.rows.length) {
+      await client.query('ROLLBACK');
+      return null;
+    }
+    if (!orderRow.rows[0].active_order) {
+      await client.query('ROLLBACK');
+      return { code: 'CANCELLED' };
+    }
 
     const current = await client.query('SELECT order_status FROM order_status WHERE order_id = $1', [order_id]);
     if (!current.rows.length) {
@@ -333,8 +407,16 @@ async function updateOrderStatus(order_id, newStatus) {
   }
 }
 
-/** Toggle a single service's completed flag on an order. */
+/** Toggle a single service's completed flag on an order.
+ *  Blocks updates on cancelled orders (active_order = 0).
+ *  Returns { code: 'CANCELLED' } if cancelled, null if order/service not found.
+ */
 async function updateOrderService(order_id, service_id, service_completed) {
+  // Check if the order is cancelled
+  const orderRow = await query('SELECT active_order FROM orders WHERE order_id = $1', [order_id]);
+  if (!orderRow.length) return null;
+  if (!orderRow[0].active_order) return { code: 'CANCELLED' };
+
   const rows = await query(
     `UPDATE order_services SET service_completed = $1
       WHERE order_id = $2 AND service_id = $3 RETURNING *`,

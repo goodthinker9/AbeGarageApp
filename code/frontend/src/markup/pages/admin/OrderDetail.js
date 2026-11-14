@@ -100,12 +100,18 @@ function OrderDetail() {
               {/* Status */}
               <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                 <label><strong>Status</strong></label>
-                <select value={order.order_status} onChange={handleStatusChange}
-                  className="custom-select-box" style={{ width: '200px', marginLeft: '0.75rem' }}>
-                  <option value={ORDER_STATUS.RECEIVED}>{ORDER_STATUS_NAMES[0]}</option>
-                  <option value={ORDER_STATUS.IN_PROGRESS}>{ORDER_STATUS_NAMES[1]}</option>
-                  <option value={ORDER_STATUS.COMPLETED}>{ORDER_STATUS_NAMES[2]}</option>
-                </select>
+                {order.active_order ? (
+                  <select value={order.order_status} onChange={handleStatusChange}
+                    className="custom-select-box" style={{ width: '200px', marginLeft: '0.75rem' }}>
+                    <option value={ORDER_STATUS.RECEIVED}>{ORDER_STATUS_NAMES[0]}</option>
+                    <option value={ORDER_STATUS.IN_PROGRESS}>{ORDER_STATUS_NAMES[1]}</option>
+                    <option value={ORDER_STATUS.COMPLETED}>{ORDER_STATUS_NAMES[2]}</option>
+                  </select>
+                ) : (
+                  <span style={{ ...{ background: '#dc3545', color: '#fff' }, padding: '2px 10px', borderRadius: '12px', fontSize: '0.8rem', marginLeft: '0.75rem' }}>
+                    Cancelled
+                  </span>
+                )}
               </div>
 
               {/* Customer & Vehicle */}
@@ -158,6 +164,7 @@ function OrderDetail() {
                         <td>{s.service_description || '—'}</td>
                         <td>
                           <input type="checkbox" checked={!!s.service_completed}
+                            disabled={!order.active_order}
                             onChange={() => toggleService(s.service_id, s.service_completed)} />
                         </td>
                       </tr>

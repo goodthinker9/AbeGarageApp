@@ -73,6 +73,10 @@ async function updateOrderStatus(req, res, next) {
     if (Number(req.employee_role) === 1 && order.employee_id !== req.employee_id) {
       return res.status(403).json({ status: 'fail', message: 'You can only update orders assigned to you.' });
     }
+    // Block updates on cancelled orders
+    if (!order.active_order) {
+      return res.status(400).json({ status: 'fail', message: 'Order is cancelled.' });
+    }
     const updated = await orderService.updateOrderStatus(req.params.id, req.body.order_status);
     return res.status(200).json({ status: 'success', data: updated });
   } catch (err) {
@@ -89,6 +93,10 @@ async function updateOrderService(req, res, next) {
     }
     if (Number(req.employee_role) === 1 && order.employee_id !== req.employee_id) {
       return res.status(403).json({ status: 'fail', message: 'You can only update orders assigned to you.' });
+    }
+    // Block updates on cancelled orders
+    if (!order.active_order) {
+      return res.status(400).json({ status: 'fail', message: 'Order is cancelled.' });
     }
     const updated = await orderService.updateOrderService(
       req.params.id, req.body.service_id, req.body.service_completed,

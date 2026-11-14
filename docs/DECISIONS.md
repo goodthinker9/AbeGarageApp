@@ -147,3 +147,19 @@ The Orders module has significant data requirements (linking employees, customer
 ## Why not confirm garage.js content?
 
 The values in `src/config/garage.js` (address, phone, hours, highlights) are placeholders marked with "TODO: confirm with client" comments. They will be updated once the client provides the real information. Fabricated marketing claims (certifications, warranties) have been removed to avoid misrepresenting the business.
+
+## Why smart-diff service replacement instead of delete-all?
+
+The original `updateOrder` deleted all `order_services` rows and re-inserted them, losing the `service_completed` flag for services that were already done. The fix compares the new `service_ids` with the existing rows: services that stay keep their row (and its completed flag), new services get inserted with `completed = 0`, and only removed services are deleted. This preserves work already done when editing an order.
+
+## Why reject duplicate service_ids?
+
+Sending `[1, 1, 2]` would create duplicate `order_services` rows for service 1, causing confusion in the UI and potential constraint issues. The validator rejects duplicates with a 400 error so the client can fix the input. Deduping silently was considered but rejected: if the client is sending duplicates, that is a bug in the client code that should be surfaced, not hidden.
+
+## Why block status/service updates on cancelled orders?
+
+A cancelled order (`active_order = 0`) is a terminal state. Allowing status changes or service toggles on a cancelled order would create inconsistent data — a cancelled order should not be marked "Completed" or have services checked off. The controller checks `active_order` on the order before calling the service, returning 400 "Order is cancelled" if the order is not active. The frontend disables the status dropdown and service checkboxes for cancelled orders so the user cannot even attempt the update.
+
+## Why validate employee and services in updateOrder like createOrder?
+
+Without validation, assigning a non-existent or inactive employee to an order would cause a FK violation (500) or silently set a bad reference. Validating inside the transaction (before the UPDATE) returns a clear 400 with `{ field, message }` instead. Services already on the order are exempt from the active check — a service may have been deactivated after the order was created, but it should still be allowed to stay on the order.

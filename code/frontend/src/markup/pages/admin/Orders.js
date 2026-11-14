@@ -12,6 +12,14 @@ const STATUS_BADGE = {
   2: { background: '#198754', color: '#fff' },
 };
 
+// Returns the badge style and label for an order, considering cancellation
+function getBadge(o) {
+  if (!o.active_order) {
+    return { style: { background: '#dc3545', color: '#fff' }, label: 'Cancelled' };
+  }
+  return { style: STATUS_BADGE[o.order_status] || { background: '#6c757d', color: '#fff' }, label: ORDER_STATUS_NAMES[o.order_status] || 'Unknown' };
+}
+
 function Orders() {
   const navigate = useNavigate();
   const { employee } = useAuth();
@@ -110,8 +118,8 @@ function Orders() {
                             <td>{o.vehicle_make} {o.vehicle_model} ({o.vehicle_tag})</td>
                             <td>{o.employee_first_name} {o.employee_last_name}</td>
                             <td>
-                              <span style={{ ...STATUS_BADGE[o.order_status], padding: '2px 10px', borderRadius: '12px', fontSize: '0.8rem' }}>
-                                {ORDER_STATUS_NAMES[o.order_status] || 'Unknown'}
+                              <span style={{ ...getBadge(o).style, padding: '2px 10px', borderRadius: '12px', fontSize: '0.8rem' }}>
+                                {getBadge(o).label}
                               </span>
                             </td>
                             <td>${(o.order_total_price || 0).toLocaleString()}</td>
