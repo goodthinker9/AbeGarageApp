@@ -498,3 +498,54 @@ input:disabled {
     font-size: 1.5rem;
   }
 }
+
+/* ── Section title red dash (matches design) ──────────────────────────────── */
+.sec-title h2 .decor,
+h2 .decor {
+  display: inline-block;
+  width: 32px;
+  height: 3px;
+  background: #ee0c0a;
+  margin-left: 8px;
+  margin-bottom: 4px;
+  vertical-align: middle;
+}
+
+/* Login page centred layout */
+.login-section {
+  padding: 60px 0 80px;
+}
+.login-section .sec-title h2 {
+  font-size: 2rem;
+  color: #0a1436;
+}
+.login-section .sec-title h2 .decor {
+  display: inline-block;
+}
+
+/* Footer social placeholder (shown when no URL is set) */
+.social-placeholder {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Customer profile section tabs */
+.customer-profile-tabs {
+  overflow-x: auto;
+}
+
+/* Page title breadcrumb */
+.page-breadcrumb li {
+  display: inline;
+}
+
+/* Service block cards on home/services */
+.service-block-one .inner-box {
+  min-height: 160px;
+}
+
+/* CTA bar on home/about/services/contact */
+.schedule-cta-bar {
+  background: #ee0c0a;
+  padding: 30px 0;
+}

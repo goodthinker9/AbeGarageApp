@@ -1,10 +1,24 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import garageInfo from '../../../config/garage';
+import serviceService from '../../../services/service.service';
 
 function Footer() {
+  const [footerServices, setFooterServices] = useState([]);
+
+  useEffect(() => {
+    serviceService.getActiveServices()
+      .then((r) => r.json())
+      .then((d) => { if (d.status === 'success') setFooterServices(d.data.slice(0, 5)); })
+      .catch(() => {});
+  }, []);
+
+  const { social } = garageInfo;
+
   return (
     <footer className="main-footer">
+
+      {/* ── Three contact info boxes ──────────────────────────────────────── */}
       <div className="upper-box">
         <div className="auto-container">
           <div className="row no-gutters">
@@ -21,7 +35,7 @@ function Footer() {
                 <div className="content">
                   <div className="icon"><span className="flaticon-email" /></div>
                   <div className="text">
-                    Email us:<br />
+                    Email us :<br />
                     <a href={`mailto:${garageInfo.email}`}>{garageInfo.email}</a>
                   </div>
                 </div>
@@ -32,8 +46,8 @@ function Footer() {
                 <div className="content">
                   <div className="icon"><span className="flaticon-phone" /></div>
                   <div className="text">
-                    Call us on:<br />
-                    <strong>{garageInfo.phone}</strong>
+                    Call us on :<br />
+                    <strong>+ {garageInfo.phone}</strong>
                   </div>
                 </div>
               </div>
@@ -42,52 +56,98 @@ function Footer() {
         </div>
       </div>
 
+      {/* ── 4-column widgets section ──────────────────────────────────────── */}
       <div className="widgets-section">
         <div className="auto-container">
           <div className="widgets-inner-container">
             <div className="row clearfix">
 
-              {/* About blurb + hours */}
-              <div className="footer-column col-lg-4">
+              {/* Col 1 – About blurb */}
+              <div className="footer-column col-lg-3 col-md-6">
                 <div className="widget widget_about">
-                  <div className="text" style={{ marginBottom: '0.75rem' }}>
-                    {garageInfo.highlights.map((h) => (
-                      <div key={h} style={{ marginBottom: '0.25rem' }}>• {h}</div>
-                    ))}
-                  </div>
-                  <div className="text" style={{ color: '#ccc', fontSize: '0.9rem' }}>
-                    {garageInfo.hours}
-                  </div>
+                  <div className="text">{garageInfo.footerBlurb}</div>
                 </div>
               </div>
 
-              {/* Navigation links */}
-              <div className="footer-column col-lg-4">
+              {/* Col 2 – Useful Links */}
+              <div className="footer-column col-lg-3 col-md-6">
                 <div className="widget widget_links">
-                  <h4 className="widget_title">Quick Links</h4>
+                  <h4 className="widget_title">Usefull Links</h4>
                   <div className="widget-content">
                     <ul className="list">
                       <li><Link to="/">Home</Link></li>
                       <li><Link to="/about">About Us</Link></li>
-                      <li><Link to="/services">Services</Link></li>
+                      <li><Link to="/contact">Appointment</Link></li>
                       <li><Link to="/contact">Contact Us</Link></li>
                     </ul>
                   </div>
                 </div>
               </div>
 
-              {/* Contact */}
-              <div className="footer-column col-lg-4">
-                <div className="widget">
-                  <h4 className="widget_title">Contact</h4>
-                  <ul className="list" style={{ listStyle: 'none', padding: 0 }}>
-                    <li style={{ marginBottom: '0.4rem' }}>{garageInfo.address}</li>
-                    <li style={{ marginBottom: '0.4rem' }}>
-                      <a href={`tel:${garageInfo.phone}`}>{garageInfo.phone}</a>
-                    </li>
-                    <li>
-                      <a href={`mailto:${garageInfo.email}`}>{garageInfo.email}</a>
-                    </li>
+              {/* Col 3 – Our Services (live from API) */}
+              <div className="footer-column col-lg-3 col-md-6">
+                <div className="widget widget_links">
+                  <h4 className="widget_title">Our Services</h4>
+                  <div className="widget-content">
+                    <ul className="list">
+                      {footerServices.length > 0
+                        ? footerServices.map((s) => (
+                            <li key={s.service_id}>
+                              <Link to="/services">{s.service_name}</Link>
+                            </li>
+                          ))
+                        : garageInfo.additionalServices.slice(0, 5).map((s) => (
+                            <li key={s}><Link to="/services">{s}</Link></li>
+                          ))
+                      }
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Col 4 – Newsletter + social */}
+              <div className="footer-column col-lg-3 col-md-6">
+                <div className="widget widget_newsletter">
+                  <h4 className="widget_title">Newsletter</h4>
+                  <div className="text">Get latest updates and offers.</div>
+                  <ul className="social-links">
+                    {social.facebook && (
+                      <li>
+                        <a href={social.facebook} target="_blank" rel="noreferrer">
+                          <span className="fab fa-facebook-f" />
+                        </a>
+                      </li>
+                    )}
+                    {social.linkedin && (
+                      <li>
+                        <a href={social.linkedin} target="_blank" rel="noreferrer">
+                          <span className="fab fa-linkedin-in" />
+                        </a>
+                      </li>
+                    )}
+                    {social.twitter && (
+                      <li>
+                        <a href={social.twitter} target="_blank" rel="noreferrer">
+                          <span className="fab fa-twitter" />
+                        </a>
+                      </li>
+                    )}
+                    {social.googlePlus && (
+                      <li>
+                        <a href={social.googlePlus} target="_blank" rel="noreferrer">
+                          <span className="fab fa-google-plus-g" />
+                        </a>
+                      </li>
+                    )}
+                    {/* Show placeholder icons when no social URLs set */}
+                    {!social.facebook && !social.linkedin && !social.twitter && !social.googlePlus && (
+                      <>
+                        <li><span className="social-placeholder fab fa-facebook-f" /></li>
+                        <li><span className="social-placeholder fab fa-linkedin-in" /></li>
+                        <li><span className="social-placeholder fab fa-twitter" /></li>
+                        <li><span className="social-placeholder fab fa-google-plus-g" /></li>
+                      </>
+                    )}
                   </ul>
                 </div>
               </div>
@@ -97,10 +157,11 @@ function Footer() {
         </div>
       </div>
 
+      {/* ── Copyright ─────────────────────────────────────────────────────── */}
       <div className="auto-container">
         <div className="footer-bottom">
           <div className="copyright-text">
-            © {new Date().getFullYear()} <Link to="/">{garageInfo.name}</Link>. All rights reserved.
+            © Copyright <Link to="/">{garageInfo.name}</Link> {new Date().getFullYear()}. All rights reserved.
           </div>
         </div>
       </div>

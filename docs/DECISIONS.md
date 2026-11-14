@@ -187,3 +187,27 @@ Order status pages contain personal data (name, masked contact info). They shoul
 ## Why Cache-Control: no-store on the public order response?
 
 The API response contains personal data. Setting `Cache-Control: no-store` prevents CDN, proxy, and browser caches from storing it. This is defence-in-depth alongside the fact that the data is already masked.
+
+## Why all real-world text lives in garage.js?
+
+The design contains taglines, marketing copy, and contact details that belong to the client, not the developer. Hardcoding them in component files means every client change requires a code edit and a deploy. `garage.js` is a single config file — the client (or the developer on their behalf) edits it once and all pages update. Every value is marked "TODO: confirm with client" until the real values are supplied.
+
+## Why are invented claims (since 1992, 24 years, certifications, warranty) excluded?
+
+The design mock was built with placeholder copy. Publishing those claims without verification would misrepresent the business and potentially violate consumer-protection rules. Neutral, factual text is used instead, all in `garage.js` where the client can supply verified replacements.
+
+## Why use `process.env.PUBLIC_URL` for template asset images?
+
+Template images are in the `public/` folder (served statically), not in `src/`. React's import system handles `src/` assets; files in `public/` must be referenced via `PUBLIC_URL`. Using `${process.env.PUBLIC_URL}/assets/images/...` is the correct CRA pattern and avoids a 404 when the app is deployed to a sub-path.
+
+## Why add email/phone/vehicle year to GET /api/orders?
+
+The order list design shows three lines per customer (name, email, phone) and two lines per vehicle (make model, year/tag). Fetching this data in the list query avoids N+1 round-trips. The fields are low-sensitivity (staff-only endpoint) and directly useful for identifying the right order at a glance.
+
+## Why add customer orders to GET /api/customer/:id?
+
+The customer detail page shows "Orders of {first_name}" as a list. Fetching the orders in the same endpoint call avoids a second HTTP request from the frontend and keeps the customer detail page load to a single round-trip.
+
+## Why separate "Couldn't load" from "This link is not valid" on the public order page?
+
+A 400/404 means the link itself is wrong or the order doesn't exist — the user should check the URL or contact support. A 5xx/network error is a temporary server problem — the user should try again. Showing the same message for both would cause users with a valid link to think their link is broken when the server is simply down.

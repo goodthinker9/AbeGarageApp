@@ -166,8 +166,9 @@ async function getAllOrders({ limit = 20, offset = 0, status, search, employee_i
   const rows = await query(
     `SELECT
        o.order_id, o.order_hash, o.order_date, o.active_order,
+       c.customer_email, c.customer_phone_number,
        ci.customer_first_name, ci.customer_last_name,
-       cvi.vehicle_make, cvi.vehicle_model, cvi.vehicle_tag,
+       cvi.vehicle_year, cvi.vehicle_make, cvi.vehicle_model, cvi.vehicle_tag,
        ei.employee_first_name, ei.employee_last_name,
        COALESCE(os.order_status, 0) AS order_status,
        oi.order_total_price

@@ -35,21 +35,22 @@ export default function PublicOrderPage() {
   const { hash } = useParams();
   useNoIndex();
 
-  const [order, setOrder]     = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [invalid, setInvalid] = useState(false);
+  const [order, setOrder]       = useState(null);
+  const [loading, setLoading]   = useState(true);
+  const [invalid, setInvalid]   = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [netError, setNetError] = useState(false);
 
   useEffect(() => {
     publicOrderService.getPublicOrder(hash)
       .then(async (res) => {
         if (res.status === 400) { setInvalid(true);  return; }
         if (res.status === 404) { setNotFound(true); return; }
-        if (!res.ok) { setNotFound(true); return; }
+        if (!res.ok) { setNetError(true); return; }
         const json = await res.json();
         setOrder(json.data);
       })
-      .catch(() => setNotFound(true))
+      .catch(() => setNetError(true))
       .finally(() => setLoading(false));
   }, [hash]);
 
@@ -64,7 +65,7 @@ export default function PublicOrderPage() {
     );
   }
 
-  /* ── Invalid link ────────────────────────────────────────────────────────── */
+  /* ── Invalid / not found ────────────────────────────────────────────────── */
   if (invalid || notFound) {
     return (
       <section className="contact-section">
@@ -74,7 +75,24 @@ export default function PublicOrderPage() {
             The order link you followed doesn't match any order in our system.
             Please check the link or contact us for assistance.
           </p>
-          <a href={`tel:${garageInfo.phone}`} className="order-call-btn">
+          <a href={`tel:${garageInfo.phoneTel}`} className="order-call-btn">
+            Call us: {garageInfo.phone}
+          </a>
+        </div>
+      </section>
+    );
+  }
+
+  /* ── Network / server error ──────────────────────────────────────────────── */
+  if (netError) {
+    return (
+      <section className="contact-section">
+        <div className="auto-container" style={{ padding: '4rem 0', textAlign: 'center' }}>
+          <h2 style={{ color: '#0a1436', marginBottom: '1rem' }}>Couldn't load, please try again</h2>
+          <p style={{ color: '#666', marginBottom: '1.5rem' }}>
+            There was a problem loading your order. Please refresh the page or contact us.
+          </p>
+          <a href={`tel:${garageInfo.phoneTel}`} className="order-call-btn">
             Call us: {garageInfo.phone}
           </a>
         </div>
@@ -202,7 +220,7 @@ export default function PublicOrderPage() {
           {/* ── Divider + Call us ────────────────────────────────────────────── */}
           <hr className="order-section-divider" />
           <div style={{ textAlign: 'center' }}>
-            <a href={`tel:${garageInfo.phone}`} className="order-call-btn">
+            <a href={`tel:${garageInfo.phoneTel}`} className="order-call-btn">
               Call us: {garageInfo.phone}
             </a>
           </div>

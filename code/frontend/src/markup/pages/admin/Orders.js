@@ -6,18 +6,19 @@ import orderService from '../../../services/order.service';
 import { ORDER_STATUS_NAMES } from '../../../constants/orderStatus';
 
 const PAGE_SIZE = 10;
-const STATUS_BADGE = {
+
+const STATUS_STYLES = {
   0: { background: '#6c757d', color: '#fff' },
-  1: { background: '#0d6efd', color: '#fff' },
+  1: { background: '#e6a817', color: '#fff' },
   2: { background: '#198754', color: '#fff' },
 };
 
-// Returns the badge style and label for an order, considering cancellation
-function getBadge(o) {
-  if (!o.active_order) {
-    return { style: { background: '#dc3545', color: '#fff' }, label: 'Cancelled' };
-  }
-  return { style: STATUS_BADGE[o.order_status] || { background: '#6c757d', color: '#fff' }, label: ORDER_STATUS_NAMES[o.order_status] || 'Unknown' };
+function getStatusBadge(o) {
+  if (!o.active_order) return { style: { background: '#dc3545', color: '#fff' }, label: 'Cancelled' };
+  return {
+    style: STATUS_STYLES[o.order_status] || STATUS_STYLES[0],
+    label: ORDER_STATUS_NAMES[o.order_status] || 'Received',
+  };
 }
 
 function Orders() {
@@ -26,14 +27,14 @@ function Orders() {
   const token = employee?.employee_token ?? '';
   const role  = employee?.employee_role ?? 1;
 
-  const [orders, setOrders] = useState([]);
-  const [total, setTotal]   = useState(0);
-  const [page, setPage]     = useState(0);
-  const [search, setSearch] = useState('');
-  const [inputVal, setInputVal] = useState('');
+  const [orders, setOrders]         = useState([]);
+  const [total, setTotal]           = useState(0);
+  const [page, setPage]             = useState(0);
+  const [search, setSearch]         = useState('');
+  const [inputVal, setInputVal]     = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(null);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -45,9 +46,7 @@ function Orders() {
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
         return res.json();
       })
-      .then((data) => {
-        if (data) { setOrders(data.data || []); setTotal(data.total || 0); }
-      })
+      .then((data) => { if (data) { setOrders(data.data || []); setTotal(data.total || 0); } })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [search, statusFilter, page, token, navigate]);
@@ -64,8 +63,8 @@ function Orders() {
         <div className="col-md-9 admin-right-side">
           <section className="contact-section">
             <div className="auto-container">
-              <div className="contact-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-                <h2>Orders</h2>
+              <div className="sec-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <h2>Orders <span className="decor" /></h2>
                 {(role === 2 || role === 3) && (
                   <Link to="/admin/add-order" className="theme-btn btn-style-one">Add Order</Link>
                 )}
@@ -78,10 +77,12 @@ function Orders() {
                     type="text"
                     value={inputVal}
                     onChange={(e) => setInputVal(e.target.value)}
-                    placeholder="Search by customer name, email, phone or vehicle tag…"
+                    placeholder="Search customer name, email, phone or vehicle tag…"
                     style={{ flex: 1, padding: '0.4rem 0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
                   />
-                  <button className="theme-btn btn-style-one" type="submit" style={{ padding: '0.4rem 1rem' }}>Search</button>
+                  <button className="theme-btn btn-style-one" type="submit" style={{ padding: '0.4rem 1rem' }}>
+                    Search
+                  </button>
                 </form>
                 <select
                   value={statusFilter}
@@ -96,7 +97,7 @@ function Orders() {
               </div>
 
               {loading && <p>Loading…</p>}
-              {error && <p style={{ color: 'red' }}>{error}</p>}
+              {error   && <p style={{ color: 'red' }}>{error}</p>}
 
               {!loading && !error && (
                 <>
@@ -104,36 +105,56 @@ function Orders() {
                     <table className="table table-striped table-bordered">
                       <thead>
                         <tr>
-                          <th>Order #</th><th>Date</th><th>Customer</th>
-                          <th>Vehicle</th><th>Employee</th><th>Status</th>
-                          <th>Total</th><th>View</th>
+                          <th>Order Id</th>
+                          <th>Customer</th>
+                          <th>Vehicle</th>
+                          <th>Order Date</th>
+                          <th>Received by</th>
+                          <th>Order status</th>
+                          <th>View / Edit</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {orders.map((o) => (
-                          <tr key={o.order_id}>
-                            <td>{o.order_id}</td>
-                            <td>{new Date(o.order_date).toLocaleDateString()}</td>
-                            <td>{o.customer_first_name} {o.customer_last_name}</td>
-                            <td>{o.vehicle_make} {o.vehicle_model} ({o.vehicle_tag})</td>
-                            <td>{o.employee_first_name} {o.employee_last_name}</td>
-                            <td>
-                              <span style={{ ...getBadge(o).style, padding: '2px 10px', borderRadius: '12px', fontSize: '0.8rem' }}>
-                                {getBadge(o).label}
-                              </span>
-                            </td>
-                            <td>${(o.order_total_price || 0).toLocaleString()}</td>
-                            <td>
-                              <Link to={`/admin/order/${o.order_id}`}
-                                className="theme-btn btn-style-one"
-                                style={{ fontSize: '0.8rem', padding: '3px 10px' }}>
-                                View
-                              </Link>
-                            </td>
-                          </tr>
-                        ))}
+                        {orders.map((o) => {
+                          const badge = getStatusBadge(o);
+                          return (
+                            <tr key={o.order_id}>
+                              <td>{o.order_id}</td>
+                              <td>
+                                <div style={{ fontWeight: 600 }}>{o.customer_first_name} {o.customer_last_name}</div>
+                                {o.customer_email && <div style={{ fontSize: '0.82rem', color: '#555' }}>{o.customer_email}</div>}
+                                {o.customer_phone_number && <div style={{ fontSize: '0.82rem', color: '#555' }}>{o.customer_phone_number}</div>}
+                              </td>
+                              <td>
+                                <div>{o.vehicle_make} {o.vehicle_model}</div>
+                                <div style={{ fontSize: '0.82rem', color: '#555' }}>{o.vehicle_year}, {o.vehicle_tag}</div>
+                              </td>
+                              <td>{new Date(o.order_date).toLocaleDateString()}</td>
+                              <td>{o.employee_first_name} {o.employee_last_name}</td>
+                              <td>
+                                <span style={{ ...badge.style, padding: '3px 10px', borderRadius: '12px', fontSize: '0.8rem' }}>
+                                  {badge.label}
+                                </span>
+                              </td>
+                              <td>
+                                <Link to={`/admin/order/${o.order_id}`}
+                                  className="theme-btn btn-style-one"
+                                  style={{ fontSize: '0.8rem', padding: '3px 10px', marginRight: '4px' }}>
+                                  View
+                                </Link>
+                                {(role === 2 || role === 3) && (
+                                  <Link to={`/admin/order/edit/${o.order_id}`}
+                                    className="theme-btn btn-style-one"
+                                    style={{ fontSize: '0.8rem', padding: '3px 10px' }}>
+                                    Edit
+                                  </Link>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
                         {orders.length === 0 && (
-                          <tr><td colSpan="8" style={{ textAlign: 'center' }}>No orders found.</td></tr>
+                          <tr><td colSpan="7" style={{ textAlign: 'center' }}>No orders found.</td></tr>
                         )}
                       </tbody>
                     </table>

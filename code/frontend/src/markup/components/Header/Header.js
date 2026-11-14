@@ -20,21 +20,24 @@ function Header() {
 
   return (
     <header className="main-header header-style-one">
+
       {/* ── Top bar ────────────────────────────────────────────────────────── */}
       <div className="header-top">
         <div className="auto-container">
           <div className="inner-container">
             <div className="left-column">
+              {/* Red tagline block */}
+              <div className="text">{garageInfo.tagline}</div>
               <div className="office-hour">{garageInfo.hours}</div>
             </div>
             <div className="right-column">
               {isLogged ? (
                 <div className="phone-number">
-                  <strong>Welcome, {employee?.employee_first_name}</strong>
+                  <strong>Welcome {employee?.employee_first_name}</strong>
                 </div>
               ) : (
                 <div className="phone-number">
-                  Call us: <strong>{garageInfo.phone}</strong>
+                  Call Abe: <strong>{garageInfo.phone}</strong>
                 </div>
               )}
             </div>
@@ -53,6 +56,7 @@ function Header() {
             </div>
             <div className="right-column">
               <div className="nav-outer">
+                {/* Mobile hamburger */}
                 <button
                   className="mobile-nav-toggler"
                   onClick={() => setMenuOpen((o) => !o)}
@@ -62,6 +66,8 @@ function Header() {
                 >
                   <img src={iconBar} alt="menu" />
                 </button>
+
+                {/* Desktop nav */}
                 <nav className="main-menu navbar-expand-md navbar-light">
                   <div className="collapse navbar-collapse show clearfix">
                     <ul className="navigation">
@@ -69,23 +75,23 @@ function Header() {
                       <li><Link to="/about">About Us</Link></li>
                       <li><Link to="/services">Services</Link></li>
                       <li><Link to="/contact">Contact Us</Link></li>
+                      {isLogged && <li><Link to="/admin">Admin</Link></li>}
                     </ul>
                   </div>
                 </nav>
               </div>
-              <div className="search-btn" />
-              {isLogged ? (
-                <div className="link-btn" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                  <Link to="/admin" className="theme-btn btn-style-one">Dashboard</Link>
-                  <button className="theme-btn btn-style-one blue" onClick={logOut} type="button">
-                    Log out
+
+              {/* Separator + login/logout button */}
+              <div className="sep-box"></div>
+              <div className="link-btn">
+                {isLogged ? (
+                  <button className="theme-btn btn-style-one" onClick={logOut} type="button">
+                    Log Out
                   </button>
-                </div>
-              ) : (
-                <div className="link-btn">
-                  <Link to="/login" className="theme-btn btn-style-one">Login</Link>
-                </div>
-              )}
+                ) : (
+                  <Link to="/login" className="theme-btn btn-style-one">Sign In</Link>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -110,23 +116,21 @@ function Header() {
                         <li><Link to="/about">About Us</Link></li>
                         <li><Link to="/services">Services</Link></li>
                         <li><Link to="/contact">Contact Us</Link></li>
+                        {isLogged && <li><Link to="/admin">Admin</Link></li>}
                       </ul>
                     </div>
                   </nav>
                 </div>
-                <div className="search-btn" />
-                {isLogged ? (
-                  <div className="link-btn" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <Link to="/admin" className="theme-btn btn-style-one">Dashboard</Link>
-                    <button className="theme-btn btn-style-one blue" onClick={logOut} type="button">
-                      Log out
+                <div className="sep-box"></div>
+                <div className="link-btn">
+                  {isLogged ? (
+                    <button className="theme-btn btn-style-one" onClick={logOut} type="button">
+                      Log Out
                     </button>
-                  </div>
-                ) : (
-                  <div className="link-btn">
-                    <Link to="/login" className="theme-btn btn-style-one">Login</Link>
-                  </div>
-                )}
+                  ) : (
+                    <Link to="/login" className="theme-btn btn-style-one">Sign In</Link>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -139,7 +143,7 @@ function Header() {
           className="mobile-menu-overlay"
           style={{
             position: 'fixed', inset: 0, zIndex: 9999,
-            background: 'rgba(0,0,0,0.85)', display: 'flex',
+            background: 'rgba(0,0,0,0.92)', display: 'flex',
             flexDirection: 'column', padding: '2rem',
           }}
         >
@@ -177,12 +181,11 @@ function Header() {
                     </span>
                   </li>
                   {[
-                    { to: '/admin',          label: 'Dashboard'    },
+                    { to: '/admin',           label: 'Dashboard'    },
                     { to: '/admin/orders',    label: 'Orders'       },
-                    { to: '/admin/employees',    label: 'Employees'    },
-                    { to: '/admin/add-employee', label: 'Add Employee' },
-                    { to: '/admin/services',     label: 'Services'     },
-                    { to: '/admin/customers',    label: 'Customers'    },
+                    { to: '/admin/customers', label: 'Customers'    },
+                    { to: '/admin/services',  label: 'Services'     },
+                    { to: '/admin/employees', label: 'Employees'    },
                   ].map(({ to, label }) => (
                     <li key={to} style={{ marginBottom: '1rem' }}>
                       <Link to={to} onClick={closeMenu}
@@ -200,7 +203,7 @@ function Header() {
                       }}
                       type="button"
                     >
-                      Log out
+                      Log Out
                     </button>
                   </li>
                 </>
@@ -210,7 +213,7 @@ function Header() {
                 <li style={{ marginTop: '1.5rem' }}>
                   <Link to="/login" onClick={closeMenu}
                     style={{ color: '#fff', fontSize: '1.25rem', textDecoration: 'none' }}>
-                    Login
+                    Sign In
                   </Link>
                 </li>
               )}

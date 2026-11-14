@@ -89,7 +89,18 @@ async function getCustomerById(customer_id) {
     [customer_id],
   );
 
-  return { ...customers[0], vehicles };
+  // Also fetch the customer's orders (id, date, status) for the customer detail page
+  const orders = await query(
+    `SELECT o.order_id, o.order_date, o.active_order,
+            COALESCE(os.order_status, 0) AS order_status
+       FROM orders o
+       LEFT JOIN order_status os ON o.order_id = os.order_id
+      WHERE o.customer_id = $1
+      ORDER BY o.order_id DESC`,
+    [customer_id],
+  );
+
+  return { ...customers[0], vehicles, orders };
 }
 
 /**

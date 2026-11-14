@@ -219,3 +219,65 @@ See git commit `f795d65`.
 | `docs/DECISIONS.md`: why verifyToken checks the DB, why jest.mock, why Orders is coming soon | ✓ |
 | `docs/PROGRESS.md` updated (this section) | ✓ |
 | `CI=true npm run build` result: **Compiled successfully.** (exit 0, zero warnings) | ✓ |
+
+---
+
+## Step 7 — Full UI redesign to match design images (DONE ✓)
+
+### Part A — Global Header and Footer
+
+| Task | Status |
+|------|--------|
+| Header top bar: red tagline block (`garageInfo.tagline`), hours, "Welcome {name}" when logged in, "Call Abe: phone" when not | ✓ |
+| Desktop nav: HOME, ABOUT US, SERVICES, CONTACT US, ADMIN (logged in only) → "Dashboard" button removed and replaced by ADMIN link in nav | ✓ |
+| Separate LOG OUT / SIGN IN button with divider (matches design) | ✓ |
+| Sticky header mirrors the same nav + button | ✓ |
+| Mobile menu: same public links + Admin section with Dashboard/Orders/Customers/Services/Employees | ✓ |
+| Footer: 3 contact boxes (address, email, phone with flaticon icons) | ✓ |
+| Footer 4 columns: about blurb, Useful Links, Our Services (live from API, fallback to `additionalServices`), Newsletter + social icons (hidden when URL empty) | ✓ |
+| `garage.js`: added `tagline`, `phoneTel`, `heroTitle`, `aboutIntro`, `whyUsText`, `additionalServices`, `ctaTitle`, `ctaSubtitle`, `social`, `footerBlurb` | ✓ |
+
+### Part B — Admin pages
+
+| Task | Status |
+|------|--------|
+| Orders list: columns = Order Id, Customer (name + email + phone on 3 lines), Vehicle (make model + year/tag), Order Date, Received by, Status badge, View/Edit icons; Total column removed | ✓ |
+| Backend `getAllOrders` SELECT: added `customer_email`, `customer_phone_number`, `vehicle_year` | ✓ |
+| CustomerDetail: Info / Cars / Orders tab strip; "Orders of {first_name}" order list (id, date, status dot, View link) | ✓ |
+| Backend `getCustomerById`: now returns `orders` array (order_id, order_date, active_order, order_status) | ✓ |
+| "Add new vehicle" button at top of Cars section | ✓ |
+
+### Part C — Root pages
+
+| Task | Status |
+|------|--------|
+| Home: hero with template slider image, about intro, Our Services (API cards with icons), red quality CTA banner, Why Choose Us (icon circles), Additional Services checklist, dark tire banner, red schedule CTA bar | ✓ |
+| About: page title banner, intro + image, "professional mechanics" block, Why Choose Us, Additional Services, dark tire banner, schedule CTA | ✓ |
+| Services: page title banner, service cards with icons, Why Choose Us, Additional Services, dark tire banner, schedule CTA | ✓ |
+| Contact: page title banner, map placeholder (links to Google Maps), address/email/phone with icons, schedule CTA | ✓ |
+| Login: centred form, red "LOGIN" button, no sidebar | ✓ |
+| All invented claims removed; real-world text in `garage.js` with "TODO: confirm with client" comments | ✓ |
+| PublicOrderPage: added "Couldn't load, please try again" state for network/500 errors (distinct from 400/404 "This link is not valid") | ✓ |
+| Backend: `Cache-Control: no-store` added to 400 and 404 responses of public order endpoint | ✓ |
+
+### Docs + verification
+
+| Task | Status |
+|------|--------|
+| `docs/PROGRESS.md` updated (this section) | ✓ |
+| `docs/DECISIONS.md` updated | ✓ |
+| `README.md` updated | ✓ |
+| `npm test` result: **8 suites, 98 tests, 98 passed** (exit 0) | ✓ |
+| `CI=true npm run build` result: **Compiled successfully.** (exit 0, zero warnings) | ✓ |
+
+### Design image match status
+
+| PNG | Match level |
+|-----|------------|
+| `Root Level pages/home.png` | Partial — hero, service cards, Why Choose Us, additional services, CTA bars all present; image content differs from mock (template assets used instead of real photos) |
+| `Root Level pages/about.png` | Partial — all sections present (intro, experience block, Why Choose Us, additional services, tire banner, CTA); image placeholders |
+| `Root Level pages/services.png` | Partial — service cards with icons, Why Choose Us, additional services, CTA all present; card icon images are flaticon classes not the exact PNGs |
+| `Root Level pages/contact.png` | Partial — page title banner, address/email/phone with icons, map placeholder, CTA bar; real Google Maps embed requires an API key |
+| `Root Level pages/login.png` | Matches — centred form, Email + Password fields, red LOGIN button |
+| `Root Level pages/order-detail.png` | Matches — customer name heading with red dash, status badge, intro text, two-card grid, services with badges, Call us button (Step 6) |
+| Admin pages | Not compared against PNGs in this step — functional but styling not yet matched to Admin PNGs |
