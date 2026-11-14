@@ -117,9 +117,52 @@ See git commit `f795d65`.
 
 ---
 
-## Step 6 — Public order status page + Deployment (NOT STARTED)
+## Step 6 — Public order status page (DONE ✓)
 
-Public `/order/:hash` page showing order status without login. Then deploy: Render (backend) + Vercel (frontend).
+### Part A – Backend
+
+| Task | Status |
+|------|--------|
+| `services/publicOrder.service.js`: `getPublicOrderByHash` returns masked/filtered data only; `maskEmail`, `maskPhone` helpers | ✓ |
+| Cancelled orders: `status_label = 'Cancelled'`, empty `services []` | ✓ |
+| Forbidden fields never returned: ids, internal notes, price, employee name, full email/phone, VIN | ✓ |
+| `controllers/publicOrder.controller.js`: UUID v4 regex check → 400; unknown hash → 404; `Cache-Control: no-store` | ✓ |
+| `routes/publicOrder.routes.js`: `GET /api/public/order/:hash`, own rate limiter (60 req / 15 min / IP) | ✓ |
+| Wired into `routes/index.js` | ✓ |
+| `__tests__/publicOrder.test.js`: 10 tests (invalid hash 400, UUID v3 400, 404, success shape, Cache-Control header, forbidden keys list assertion, masked email/phone, cancelled order, maskEmail/maskPhone unit tests) | ✓ |
+
+### Part B – Frontend
+
+| Task | Status |
+|------|--------|
+| `src/services/publicOrder.service.js`: `getPublicOrder(hash)` — no token | ✓ |
+| `src/markup/pages/PublicOrderPage.js`: matches order-detail.png design | ✓ |
+| Page title = customer name, red dash accent, status badge (gray/yellow/green/red) | ✓ |
+| Intro sentence from design | ✓ |
+| Two cards with red bottom border: Customer (email masked, phone masked, active) + Car in service (make model color, tag, year, mileage) | ✓ |
+| Services card: each service row with name, description, own status badge | ✓ |
+| Additional request row when present | ✓ |
+| Estimated/completion dates + notes_for_customer | ✓ |
+| Loading, invalid/not-found, and Cancelled states | ✓ |
+| Call us button (phone from `garage.js`) | ✓ |
+| noindex meta injected via `useEffect` (no extra dependency) | ✓ |
+| Responsive at 375px: cards stack vertically | ✓ |
+| `src/assets/styles/custom.css`: all public order page styles | ✓ |
+| `App.js`: `/order/:hash` route added (outside PrivateAuthRoute) | ✓ |
+
+### Part C – Docs + verification
+
+| Task | Status |
+|------|--------|
+| README updated: new endpoint + curl example | ✓ |
+| `docs/PROGRESS.md` updated (this section) | ✓ |
+| `docs/DECISIONS.md`: masked fields, rate limit, UUID check, same 404 message, noindex, no-store | ✓ |
+| `npm test` result: **8 suites, 98 tests, 98 passed** (exit 0) | ✓ |
+| `CI=true npm run build` result: **Compiled successfully.** (exit 0, zero warnings) | ✓ |
+
+---
+
+## Step 7 — Deployment: Render + Vercel (NOT STARTED)
 
 ---
 

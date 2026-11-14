@@ -172,6 +172,12 @@ CI=true npm run build
 | POST | `/api/vehicle`               | Manager/Admin | Create vehicle; 404 if customer not found |
 | PUT  | `/api/vehicle`               | Manager/Admin | Update vehicle |
 
+### Public order status
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/public/order/:hash` | None | Public customer-facing status; UUID v4 hash; masked fields only; 60 req/15 min rate limit |
+
 ### Orders
 
 | Method | Path | Auth | Description |

@@ -163,3 +163,27 @@ A cancelled order (`active_order = 0`) is a terminal state. Allowing status chan
 ## Why validate employee and services in updateOrder like createOrder?
 
 Without validation, assigning a non-existent or inactive employee to an order would cause a FK violation (500) or silently set a bad reference. Validating inside the transaction (before the UPDATE) returns a clear 400 with `{ field, message }` instead. Services already on the order are exempt from the active check — a service may have been deactivated after the order was created, but it should still be allowed to stay on the order.
+
+## Why mask email and phone on the public order page?
+
+The public `/order/:hash` URL is shared with the customer and may be forwarded to others. Returning the full email or phone number would expose personal data to anyone who has the link. Masking (`j***@gmail.com`, `***-***-5487`) gives the customer enough information to confirm the record belongs to them without leaking their full credentials to unintended recipients. The same applies to the VIN, internal notes, pricing, employee name, and all database IDs — none of these are useful to the customer and all increase privacy risk if exposed.
+
+## Why a 60 req/15 min rate limit on the public order endpoint?
+
+The public endpoint requires no authentication, making it a potential enumeration target. A determined attacker could brute-force UUIDs — impractical but worth slowing down. 60 requests per 15-minute window per IP allows legitimate customers to reload the page many times without hitting the limit while still deterring automated scanning. The login endpoint uses 10/15 min because credentials are higher-value; order hashes are single-use and lower-risk.
+
+## Why validate the hash as a UUID v4 before querying the DB?
+
+Accepting arbitrary strings and running a `WHERE order_hash = $1` query on them is safe (parameterised), but it wastes a DB round-trip for obviously invalid inputs. Validating the UUID format in the controller (regex check) returns an instant 400 without touching the database, reducing unnecessary load and giving the client a clearer error message ("Invalid order link" vs a generic 404).
+
+## Why use the same 404 message ("Order not found") for all misses?
+
+A distinct error for "hash is valid UUID but not in DB" vs "not found" would leak information about which UUIDs are valid. Using the same message for both "unknown hash" and "wrong format after DB" keeps enumeration harder.
+
+## Why noindex on the public order page?
+
+Order status pages contain personal data (name, masked contact info). They should not be indexed by search engines, which would cache them and make them discoverable. The noindex meta tag is injected via a `useEffect` hook that cleans up on unmount, avoiding a third-party dependency (react-helmet-async is not installed in this project).
+
+## Why Cache-Control: no-store on the public order response?
+
+The API response contains personal data. Setting `Cache-Control: no-store` prevents CDN, proxy, and browser caches from storing it. This is defence-in-depth alongside the fact that the data is already masked.

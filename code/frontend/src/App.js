@@ -2,13 +2,14 @@ import React from 'react';
 import { Routes, Route } from 'react-router';
 
 // Public pages
-import Home         from './markup/pages/Home';
-import Login        from './markup/pages/Login';
-import About        from './markup/pages/About';
-import Services     from './markup/pages/Services';
-import Contact      from './markup/pages/Contact';
-import Unauthorized from './markup/pages/Unauthorized';
-import NotFound     from './markup/pages/404';
+import Home            from './markup/pages/Home';
+import Login           from './markup/pages/Login';
+import About           from './markup/pages/About';
+import Services        from './markup/pages/Services';
+import Contact         from './markup/pages/Contact';
+import Unauthorized    from './markup/pages/Unauthorized';
+import NotFound        from './markup/pages/404';
+import PublicOrderPage from './markup/pages/PublicOrderPage';
 
 // Admin – shared
 import AdminDashboard from './markup/pages/admin/AdminDashboard';
@@ -62,6 +63,9 @@ function App() {
         <Route path="/services"     element={<Services />} />
         <Route path="/contact"      element={<Contact />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
+
+        {/* Public order status page – no auth */}
+        <Route path="/order/:hash"  element={<PublicOrderPage />} />
 
         {/* Admin dashboard – all logged-in staff */}
         <Route path="/admin" element={
