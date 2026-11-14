@@ -75,7 +75,8 @@ function Header() {
               </div>
               <div className="search-btn" />
               {isLogged ? (
-                <div className="link-btn">
+                <div className="link-btn" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <Link to="/admin" className="theme-btn btn-style-one">Dashboard</Link>
                   <button className="theme-btn btn-style-one blue" onClick={logOut} type="button">
                     Log out
                   </button>
@@ -115,7 +116,8 @@ function Header() {
                 </div>
                 <div className="search-btn" />
                 {isLogged ? (
-                  <div className="link-btn">
+                  <div className="link-btn" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <Link to="/admin" className="theme-btn btn-style-one">Dashboard</Link>
                     <button className="theme-btn btn-style-one blue" onClick={logOut} type="button">
                       Log out
                     </button>
@@ -175,7 +177,8 @@ function Header() {
                     </span>
                   </li>
                   {[
-                    { to: '/admin/orders',       label: 'Orders'       },
+                    { to: '/admin',          label: 'Dashboard'    },
+                    { to: '/admin/orders',    label: 'Orders'       },
                     { to: '/admin/employees',    label: 'Employees'    },
                     { to: '/admin/add-employee', label: 'Add Employee' },
                     { to: '/admin/services',     label: 'Services'     },

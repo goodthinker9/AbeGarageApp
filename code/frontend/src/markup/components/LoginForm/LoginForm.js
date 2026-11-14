@@ -51,7 +51,7 @@ function LoginForm() {
           localStorage.setItem('employee', JSON.stringify(data.data));
         }
         if (location.pathname === '/login') {
-          window.location.replace('/');
+          window.location.replace('/admin');
         } else {
           window.location.reload();
         }

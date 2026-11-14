@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import serviceService from '../../services/service.service';
+import garageInfo from '../../config/garage';
 
 function Services() {
   const [services, setServices]   = useState([]);
@@ -45,7 +46,14 @@ function Services() {
           <h2>Our Services</h2>
         </div>
         {services.length === 0 ? (
-          <p>No services available at this time. Please check back soon.</p>
+          <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+            <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>
+              Our service list is coming soon.
+            </p>
+            <p>
+              Call us at <strong>{garageInfo.phone}</strong> for more information.
+            </p>
+          </div>
         ) : (
           <div className="row clearfix">
             {services.map((svc) => (
